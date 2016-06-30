@@ -21,7 +21,7 @@ data Voom normalization for plotting
 }
 \examples{
 \dontrun{
-fitRNA <- mirFit(simDfm, wgt = TRUE)#'
+fitRNA <- mirFit(simDfm, wgt = TRUE)
 }
 }
 

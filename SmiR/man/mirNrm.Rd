@@ -19,7 +19,7 @@ data Voom normalization for plotting
 }
 \examples{
 \dontrun{
-simNrm <- mirnrm(simDfm, wgt = TRUE)#'
+simNrm <- mirnrm(simDfm, wgt = TRUE)
 }
 }
 

@@ -13,7 +13,7 @@
 #' @importFrom edgeR DGEList calcNormFactors
 #' @examples
 #' \dontrun{
-#' simNrm <- mirnrm(simDfm, wgt = TRUE)#'
+#' simNrm <- mirnrm(simDfm, wgt = TRUE)
 #' }
 #' @export
 mirNrm <- function(dfm, wgt = FALSE){
@@ -40,7 +40,7 @@ mirNrm <- function(dfm, wgt = FALSE){
 #' @importFrom edgeR DGEList calcNormFactors
 #' @examples
 #' \dontrun{
-#' fitRNA <- mirFit(simDfm, wgt = TRUE)#'
+#' fitRNA <- mirFit(simDfm, wgt = TRUE)
 #' }
 #' @export
 mirFit <- function(dfm, fileName, wgt = FALSE){
@@ -87,4 +87,67 @@ mirFit <- function(dfm, fileName, wgt = FALSE){
   # output
   write.csv(exportTable, file = paste(fileName, ".csv", sep = ""), row.names = FALSE)
   return(out)
+}
+
+
+#' @title mirPlot
+#'
+#' @description  Histogram. Also usable in most of the situations, expecially useful when end = 1.
+#' @param dfm Input dataframe.
+#' @param xTxtSize Font size of x-axis tick label. Default is 10.
+#' @param yTxtSize Font size of y-axis tick label. Default is 10.
+#' @param plotWidth Width of the output image file. Default is 170.
+#' @param plotHeight Height of the output image file. Default is 150.
+#' @return Histogram of the miRNA representative expression levels
+#' @importFrom reshape2 melt
+#' @importFrom grid grid.newpage grid.draw
+#' @importFrom gtable gtable_add_cols gtable_add_grob
+#' @import ggplot2
+#' @examples
+#' \dontrun{
+#' mirPlot(miRNANrm, xTxtSize = 6, plotWidth = 360)
+#' }
+#' @export
+mirPlot <- function(dfm, xTxtSize = 10, yTxtSize =10,
+                    plotWidth = 170, plotHeight = 150){
+  dfmplt <- melt(dfm, id.vars = colnames(dfm)[1]) # melt to make the dataframe for plotting
+
+  # plot
+  loclEnv <- environment()
+  plt <- ggplot(dfmplt, aes(x = miRNA_class, y = value, fill= variable), environment = loclEnv) +
+    geom_bar(position="dodge",stat="identity",color="black")+
+    ggtitle(NULL) +
+    xlab(NULL)+ # we can hide it using NULL
+    ylab("Normalized read counts")+
+    scale_y_continuous(expand = c(0, 0),
+                       limits = c(0, with(dfmplt, max(value) * 1.1)))+
+    theme(panel.background = element_rect(fill = 'white', colour = 'black'),
+          panel.border = element_rect(colour = "black", fill = NA, size = 0.5),
+          legend.position = "bottom",
+          legend.title = element_blank(),
+          axis.text.x = element_text(size = xTxtSize, angle = 90, hjust = 1),
+          axis.text.y = element_text(size = yTxtSize, hjust = 0.5)) +
+    scale_fill_grey(start = 0)
+
+  ## add the right-side y axis
+  grid.newpage()
+
+  # extract gtable
+  pltgtb <- ggplot_gtable(ggplot_build(plt))
+
+  # add the right side y axis
+  Aa <- which(pltgtb$layout$name == "axis-l")
+  pltgtb_a <- pltgtb$grobs[[Aa]]
+  axs <- pltgtb_a$children[[2]]
+  axs$widths <- rev(axs$widths)
+  axs$grobs <- rev(axs$grobs)
+  axs$grobs[[1]]$x <- axs$grobs[[1]]$x - unit(1, "npc") + unit(0.08, "cm")
+  Ap <- c(subset(pltgtb$layout, name == "panel", select = t:r))
+  pltgtb <- gtable_add_cols(pltgtb, pltgtb$widths[pltgtb$layout[Aa, ]$l], length(pltgtb$widths) - 1)
+  pltgtb <- gtable_add_grob(pltgtb, axs, Ap$t, length(pltgtb$widths) - 1, Ap$b)
+
+  # export the file and draw a preview
+  ggsave(filename = paste(deparse(substitute(dfm)),".plot.pdf", sep = ""), plot = pltgtb,
+         width = plotWidth, height = plotHeight, units = "mm",dpi = 600) # deparse(substitute(dfm)) converts object name into a character string
+  grid.draw(pltgtb) # preview
 }
