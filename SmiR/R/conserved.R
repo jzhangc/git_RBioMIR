@@ -5,18 +5,74 @@
 
 #' @title mirProcess
 #'
-#' @description  data pre-processing for miRNA-seq read count files.
-#' @param x TBD
-#' @return Outputs a dataframe with merged read counts from mutliple files, with annotation
+#' @description  data pre-processing for miRNA-seq read count files. This function only runs under unix or unix-like operating systems.
+#' @param wd Working directory where all the read count \code{.txt} files are stored. Default is the current working directory.
+#' @details Make sure to follow the fie name naming convention for the read count files: ID_database_targettype.txt
+#' @return Outputs a list with merged read counts from mutliple files, with annotation.
 #' @examples
 #' \dontrun{
-#' unfished
+#' readcountMerged <- mirProcess()
 #' }
 #' @export
-mirProcess <- function (x){
-  #TBD
-}
+mirProcess <- function(wd = getwd()){
+  # locate to the working directory
+  setwd(wd)
 
+  # import the files
+  system("sudo -kS ls | grep .txt > filenames", input = readline("Enter your password: ")) # call system conmand to extract the txt file name into a temporary file
+  inputDfm <- read.table(file = "filenames", stringsAsFactors = FALSE) # read the content of the
+  system("sudo -kS rm filenames", input = readline("Enter your password: ")) # call system command to remove the temporary fle
+  colnames(inputDfm) <- "org.fileName"
+  inputDfm$fileName <- sapply(inputDfm$org.fileName, function(x)unlist(strsplit(x, "\\."))[[1]], simplify = TRUE) # remove the extension of the file names
+  inputDfm$targetType <- sapply(inputDfm$fileName, function(x)unlist(strsplit(x, "_"))[[3]], simplify =TRUE)
+  inputDfm$targetType <- factor(inputDfm$targetType, levels = c(unique(inputDfm$targetType)))
+  inputDfm$experimentID <- sapply(inputDfm$fileName, function(x)unlist(strsplit(x, "_"))[[1]], simplify = TRUE)
+
+  # parse the information and create a raw data list
+  rawdataLst <- sapply(inputDfm$fileName, function(x){
+    temp <- read.table(file = paste(x, ".txt", sep=""), header = FALSE, stringsAsFactors = FALSE,
+                       row.names = NULL)
+    temp <- temp[-1,]
+    colnames(temp)[1] <- "rawCount"
+    colnames(temp)[2] <- unlist(strsplit(x, "_"))[3]
+
+    row.names(temp) <- temp[,2]
+
+    temp$species <- sapply(temp[[2]], function(i)unlist(strsplit(i, "-"))[1], simplify = TRUE)
+
+    temp$miRNA_class <- sapply(temp[[2]], function(i)paste(unlist(strsplit(i, "-"))[2],
+                                                           "-",
+                                                           unlist(strsplit(i, "-"))[3],
+                                                           sep = ""),
+                               simplify = TRUE)
+
+    temp$species <- factor(temp$species, levels = c(unique(temp$species)))
+    temp$miRNA_class <- gsub("-NA", "", temp$miRNA_class) # remove the -NA string that appears when the mirbase id is like xxx-miRXXX
+    temp$miRNA_class <- factor(temp$miRNA_class, levels = c(unique(temp$miRNA_class)))
+    return(temp)
+  }, simplify = FALSE, USE.NAMES = TRUE)
+
+  # combine the dataframes to generate count table for stats #
+  # sidenote: seq(mylist) has the same effect of seq(length(mylist))
+  # ave(): similar to tapply(), but WAY faster and doesn't have the length problem.
+  maxdataLst <- sapply(names(rawdataLst),
+                       function(x)rawdataLst[[x]][rawdataLst[[x]]$rawCount == ave(rawdataLst[[x]]$rawCount,
+                                                                                  rawdataLst[[x]]$miRNA_class, FUN = max),],
+                       simplify = FALSE, USE.NAMES = TRUE)
+
+  tgtType <- unique(sapply(names(rawdataLst),
+                           function(x)unlist(strsplit(x, "_"))[3], simplify = TRUE)) # extract the unique target types
+  maxdataLstMg <- sapply(tgtType, function(x){
+    tempLst <- maxdataLst[grep(x, names(maxdataLst))]
+    Dfm <- Reduce(function(i, j)merge(i[, c(1, 4)], j[, c(1, 4)], by = "miRNA_class", all = TRUE), tempLst)
+    names(Dfm)[-1] <- sapply(strsplit(names(tempLst), "_"), "[[", 1) # use the function "[[" and the argument ", 1" to select the first element of the list element
+    Dfm[is.na(Dfm) == TRUE] <- 0
+    Dfm <- unique(Dfm)
+    return(Dfm)
+  }, simplify = FALSE, USE.NAMES = TRUE)
+
+  return(maxdataLstMg)
+}
 
 
 #' @title mirNrm
