@@ -3,6 +3,22 @@
   return(TRUE)
 }
 
+#' @title mirProcess
+#'
+#' @description  data pre-processing for miRNA-seq read count files.
+#' @param x TBD
+#' @return Outputs a dataframe with merged read counts from mutliple files, with annotation
+#' @examples
+#' \dontrun{
+#' unfished
+#' }
+#' @export
+mirProcess <- function (x){
+  #TBD
+}
+
+
+
 #' @title mirNrm
 #'
 #' @description  data Voom normalization for plotting

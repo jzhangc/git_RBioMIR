@@ -3,6 +3,7 @@
 export(mirFit)
 export(mirNrm)
 export(mirPlot)
+export(mirProcess)
 import(ggplot2)
 importFrom(edgeR,DGEList)
 importFrom(edgeR,calcNormFactors)
