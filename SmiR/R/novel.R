@@ -1,3 +1,55 @@
+#' @title mirProcessML
+#'
+#' @description  data pre-processing for miRNA-seq read count files specific for machine learning (ML). This function only runs under unix or unix-like operating systems. see \code{\link{mirProcess}}.
+#' @param wd Working directory where all the read count \code{.txt} files are stored. Default is the current working directory.
+#' @details Make sure to follow the fie name naming convention for the read count files: ID_database_targettype.txt
+#' @return Outputs a list with merged read counts from mutliple files, with annotation. No merging inlcuded: see \code{\link{mirProcess}}.
+#' @examples
+#' \dontrun{
+#' readcountML <- mirProcessML()
+#' }
+#' @export
+mirProcessML <- function(wd = getwd()){
+  # locate to the working directory
+  setwd(wd)
+
+  # import the files
+  system("sudo -kS ls | grep .txt > filenames", input = readline("Enter your password: ")) # call system conmand to extract the txt file name into a temporary file
+  inputDfm <- read.table(file = "filenames", stringsAsFactors = FALSE) # read the content of the
+  system("sudo -kS rm filenames", input = readline("Enter your password: ")) # call system command to remove the temporary fle
+  colnames(inputDfm) <- "org.fileName"
+  inputDfm$fileName <- sapply(inputDfm$org.fileName, function(x)unlist(strsplit(x, "\\."))[[1]], simplify = TRUE) # remove the extension of the file names
+  inputDfm$targetType <- sapply(inputDfm$fileName, function(x)unlist(strsplit(x, "_"))[[3]], simplify =TRUE)
+  inputDfm$targetType <- factor(inputDfm$targetType, levels = c(unique(inputDfm$targetType)))
+  inputDfm$experimentID <- sapply(inputDfm$fileName, function(x)unlist(strsplit(x, "_"))[[1]], simplify = TRUE)
+
+  # parse the information and create a raw data list
+  rawdataLst <- sapply(inputDfm$fileName, function(x){
+    temp <- read.table(file = paste(x, ".txt", sep=""), header = FALSE, stringsAsFactors = FALSE,
+                       row.names = NULL)
+    temp <- temp[-1,]
+    colnames(temp)[1] <- "rawCount"
+    colnames(temp)[2] <- unlist(strsplit(x, "_"))[3]
+
+    row.names(temp) <- temp[,2]
+
+    temp$species <- sapply(temp[[2]], function(i)unlist(strsplit(i, "-"))[1], simplify = TRUE)
+
+    temp$miRNA_class <- sapply(temp[[2]], function(i)paste(unlist(strsplit(i, "-"))[2],
+                                                           "-",
+                                                           unlist(strsplit(i, "-"))[3],
+                                                           sep = ""),
+                               simplify = TRUE)
+
+    temp$species <- factor(temp$species, levels = c(unique(temp$species)))
+    temp$miRNA_class <- gsub("-NA", "", temp$miRNA_class) # remove the -NA string that appears when the mirbase id is like xxx-miRXXX
+    temp$miRNA_class <- factor(temp$miRNA_class, levels = c(unique(temp$miRNA_class)))
+    return(temp)
+  }, simplify = FALSE, USE.NAMES = TRUE)
+
+  return(rawdataLst)
+}
+
 #' @title hairpinTraining
 #'
 #' @description Produce a \code{.fasta} file as the training hairpin data set from the raw
