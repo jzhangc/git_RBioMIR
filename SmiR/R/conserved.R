@@ -103,7 +103,7 @@ mirNrm <- function(dfm, wgt = FALSE){
 
 #' @title mirFit
 #'
-#' @description  data Voom normalization for plotting
+#' @description Linear fitting and emperical Bayesian statistical test, with the capability of producing volcano distribution, among other useful plots.
 #' @param dfm Input dataframe.
 #' @param fileName output file name. Be sure to use quatation
 #' @param wgt If or not to apply sample weight. Default is \code{FALSE}.
