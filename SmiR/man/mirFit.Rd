@@ -17,7 +17,7 @@ mirFit(dfm, fileName, wgt = FALSE)
 Outputs a list with limma eBayes fitting, QC plots and a volcano distribution
 }
 \description{
-data Voom normalization for plotting
+Linear fitting and emperical Bayesian statistical test, with the capability of producing volcano distribution, among other useful plots.
 }
 \examples{
 \dontrun{
