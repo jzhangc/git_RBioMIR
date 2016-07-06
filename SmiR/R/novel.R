@@ -14,7 +14,7 @@ mirProcessML <- function(wd = getwd()){
   setwd(wd)
 
   # import the files
-  system("sudo -kS sh - c 'ls | grep .txt > filenames'", input = readline("Enter your password: ")) # call system conmand to extract the txt file name into a temporary file
+  system("sudo -kS sh -c 'ls | grep .txt > filenames'", input = readline("Enter your password: ")) # call system conmand to extract the txt file name into a temporary file
   inputDfm <- read.table(file = "filenames", stringsAsFactors = FALSE) # read the content of the
   system("sudo -kS rm filenames", input = readline("Enter your password: ")) # call system command to remove the temporary fle
   colnames(inputDfm) <- "org.fileName"
