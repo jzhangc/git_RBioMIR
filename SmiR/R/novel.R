@@ -14,7 +14,7 @@ mirProcessML <- function(wd = getwd()){
   setwd(wd)
 
   # import the files
-  system("sudo -kS ls | grep .txt > filenames", input = readline("Enter your password: ")) # call system conmand to extract the txt file name into a temporary file
+  system("sudo -kS sh - c 'ls | grep .txt > filenames'", input = readline("Enter your password: ")) # call system conmand to extract the txt file name into a temporary file
   inputDfm <- read.table(file = "filenames", stringsAsFactors = FALSE) # read the content of the
   system("sudo -kS rm filenames", input = readline("Enter your password: ")) # call system command to remove the temporary fle
   colnames(inputDfm) <- "org.fileName"
@@ -50,19 +50,20 @@ mirProcessML <- function(wd = getwd()){
   return(rawdataLst)
 }
 
-#' @title hairpinTraining
+#' @title hairpinSets
 #'
 #' @description Produce a \code{.fasta} file as the training hairpin data set from the raw
-#' @param refFileName File name of ther reference.
-#' @param wgt If or not to apply sample weight. Default is \code{FALSE}.
+#' @param dataLst If or not to apply sample weight.
+#' @param refFileName Full directory and file name of ther reference.
 #' @return Outputs a \code{.fasta} file that can be used as the training set for novel miRNA discovery.
+#' @details Working with large reference file might result in long running time or system freezing, depending on the hardware configureation (mainly RAM). It is recommanded to build an index for the reference file prior to this operation when the file is large (multi-GB).
 #' @importFrom seqinr read.fasta
 #' @examples
 #' \dontrun{
 #' hairpinTrainset(refFileName = "~/OneDrive/Storey lab/current_work/miRNA_pipeline/reference/hairpin.fa", rawdataLst) # produce the hairpin training set
 #' }
 #' @export
-hairpinTraining <- function(refFileName, dataLst){
+hairpinSets <- function(refFileName, dataLst){
   # load the original miRBase hairpin fasta files (reqinr::read.fasta) and convert RNA sequences into DNA sequences (U > T)
   ref <- read.fasta(file = refFileName, as.string = TRUE, forceDNAtolower = FALSE)
 
