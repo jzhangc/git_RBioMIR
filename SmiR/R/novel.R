@@ -169,11 +169,8 @@ hairpinTest <- function(refFileName, dataLst){
   refDfm <- data.frame(hairpin = AttN, sequence = refSeq, annot = AttAno, stringsAsFactors = FALSE) # replace "hairpin"
 
   # prepare the hairpin vector from the raw data list
-  tgtType <- unique(sapply(names(rawLstML),
-                           function(x)unlist(strsplit(x, "_"))[3], simplify = TRUE)) # extract the unique target types
-
-  dfm <- rbind(rawLstML[[1]][2], rawLstML[[2]][2])
-  V <- dfm[,1]
+  dfm <- do.call(rbind, parLapply(cl, tstLst, data.frame, stringsAsFactors = FALSE))
+  V <- dfm[, 2]
   V <- V[which(!V == 0)]
   V <- unique(V)
 
