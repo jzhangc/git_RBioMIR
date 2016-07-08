@@ -2,7 +2,7 @@
 % Please edit documentation in R/novel.R
 \name{hairpinTrainingSet}
 \alias{hairpinTrainingSet}
-\title{hairpinTrainingSet}
+\title{hairpinTraining}
 \usage{
 hairpinTrainingSet(refFileName, dataLst)
 }
@@ -22,7 +22,7 @@ Working with large reference file might result in long running time or system fr
 }
 \examples{
 \dontrun{
-hairpinTrainset(refFileName = "~/OneDrive/Storey lab/current_work/miRNA_pipeline/reference/hairpin.fa", rawdataLst) # produce the hairpin training set
+hairpinTraining(refFileName = "~/OneDrive/Storey lab/current_work/miRNA_pipeline/reference/hairpin.fa", rawdataLst) # produce the hairpin training set
 }
 }
 

@@ -38,7 +38,7 @@ mirProcessML <- function(wd = getwd()){
   return(rawLstML)
 }
 
-#' @title hairpinTrainingSet
+#' @title hairpinTraining
 #'
 #' @description Produce a \code{.fasta} file as the training hairpin data set from the raw read count files.
 #' @param dataLst If or not to apply sample weight.
@@ -48,7 +48,7 @@ mirProcessML <- function(wd = getwd()){
 #' @importFrom seqinr read.fasta
 #' @examples
 #' \dontrun{
-#' hairpinTrainset(refFileName = "~/OneDrive/Storey lab/current_work/miRNA_pipeline/reference/hairpin.fa", rawdataLst) # produce the hairpin training set
+#' hairpinTraining(refFileName = "~/OneDrive/Storey lab/current_work/miRNA_pipeline/reference/hairpin.fa", rawdataLst) # produce the hairpin training set
 #' }
 #' @export
 hairpinTrainingSet <- function(refFileName, dataLst){
@@ -107,7 +107,7 @@ hairpinTrainingSet <- function(refFileName, dataLst){
 #' @importFrom seqinr read.fasta
 #' @examples
 #' \dontrun{
-#' hairpinTrainset(refFileName = "~/OneDrive/Storey lab/current_work/miRNA_pipeline/reference/hairpin.fa", rawdataLst) # produce the hairpin training set
+#' hairpinTest(refFileName = "~/OneDrive/Storey lab/current_work/miRNA_pipeline/reference/hairpin.fa", rawdataLst) # produce the hairpin training set
 #' }
 #' @export
 hairpinTestSet <- function(refFileName, dataLst){
