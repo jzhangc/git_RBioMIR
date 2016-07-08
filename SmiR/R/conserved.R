@@ -7,7 +7,7 @@
 #'
 #' @description  data pre-processing for miRNA-seq read count files. This function only runs under unix or unix-like operating systems.
 #' @param wd Working directory where all the read count \code{.txt} files are stored. Default is the current working directory.
-#' @details Make sure to follow the fie name naming convention for the read count files: ID_database_targettype.txt
+#' @details Make sure to follow the file name naming convention for the read count files: ID_database_targettype.txt
 #' @return Outputs a list with merged read counts from mutliple files, with annotation.
 #' @examples
 #' \dontrun{
