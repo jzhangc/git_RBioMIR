@@ -131,7 +131,7 @@ hairpinTraining <- function(refFileName, dataLst){
     )
     out <- as.vector(out)
 
-    write.table(out, file = paste(deparse(substitute(dataLst)),".training.fastq", sep = ""),
+    write.table(out, file = paste(deparse(substitute(dataLst)),".training.fasta", sep = ""),
                 quote = FALSE, row.names = FALSE, col.names = FALSE)
 
 }
@@ -187,6 +187,6 @@ hairpinTest <- function(refFileName, dataLst){
   )
   out <- as.vector(out)
 
-  write.table(out, file = paste(deparse(substitute(dataLst)),".test.fastq", sep = ""),
+  write.table(out, file = paste(deparse(substitute(dataLst)),".test.fasta", sep = ""),
               quote = FALSE, row.names = FALSE, col.names = FALSE)
 }
