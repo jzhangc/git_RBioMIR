@@ -24,35 +24,23 @@ mirProcessML <- function(wd = getwd()){
   inputDfm$experimentID <- sapply(inputDfm$fileName, function(x)unlist(strsplit(x, "_"))[[1]], simplify = TRUE)
 
   # parse the information and create a raw data list
-  rawdataLst <- sapply(inputDfm$fileName, function(x){
+  rawLstML <- sapply(inputDfm$fileName, function(x){
     temp <- read.table(file = paste(x, ".txt", sep=""), header = FALSE, stringsAsFactors = FALSE,
                        row.names = NULL)
     temp <- temp[-1,]
     colnames(temp)[1] <- "rawCount"
-    colnames(temp)[2] <- unlist(strsplit(x, "_"))[3]
+    colnames(temp)[2] <- unlist(strsplit(x, "_"))[2]
 
     row.names(temp) <- temp[,2]
-
-    temp$species <- sapply(temp[[2]], function(i)unlist(strsplit(i, "-"))[1], simplify = TRUE)
-
-    temp$miRNA_class <- sapply(temp[[2]], function(i)paste(unlist(strsplit(i, "-"))[2],
-                                                           "-",
-                                                           unlist(strsplit(i, "-"))[3],
-                                                           sep = ""),
-                               simplify = TRUE)
-
-    temp$species <- factor(temp$species, levels = c(unique(temp$species)))
-    temp$miRNA_class <- gsub("-NA", "", temp$miRNA_class) # remove the -NA string that appears when the mirbase id is like xxx-miRXXX
-    temp$miRNA_class <- factor(temp$miRNA_class, levels = c(unique(temp$miRNA_class)))
     return(temp)
   }, simplify = FALSE, USE.NAMES = TRUE)
 
-  return(rawdataLst)
+  return(rawLstML)
 }
 
-#' @title hairpinSets
+#' @title hairpinTraining
 #'
-#' @description Produce a \code{.fasta} file as the training hairpin data set from the raw
+#' @description Produce a \code{.fasta} file as the training hairpin data set from the raw read count files.
 #' @param dataLst If or not to apply sample weight.
 #' @param refFileName Full directory and file name of ther reference.
 #' @return Outputs a \code{.fasta} file that can be used as the training set for novel miRNA discovery.
@@ -60,10 +48,69 @@ mirProcessML <- function(wd = getwd()){
 #' @importFrom seqinr read.fasta
 #' @examples
 #' \dontrun{
-#' hairpinTrainset(refFileName = "~/OneDrive/Storey lab/current_work/miRNA_pipeline/reference/hairpin.fa", rawdataLst) # produce the hairpin training set
+#' hairpinTraining(refFileName = "~/OneDrive/Storey lab/current_work/miRNA_pipeline/reference/hairpin.fa", rawdataLst) # produce the hairpin training set
 #' }
 #' @export
-hairpinSets <- function(refFileName, dataLst){
+hairpinTraining <- function(refFileName, dataLst){
+    # load the original miRBase hairpin fasta files (reqinr::read.fasta) and convert RNA sequences into DNA sequences (U > T)
+    ref <- read.fasta(file = refFileName, as.string = TRUE, forceDNAtolower = FALSE)
+
+    ref <- lapply(seq(ref), function(x)gsub("U", "T", ref[[x]])) # replace "U" with "T"
+
+    # extract attributes from the list
+    AttN <- sapply(seq(ref), function(i)attributes(ref[[i]])[[1]])
+    AttAno <- sapply(seq(ref), function(i)attributes(ref[[i]])[[2]])
+    refSeq <- unlist(ref)
+
+    refDfm <- data.frame(hairpin = AttN, sequence = refSeq, annot = AttAno, stringsAsFactors = FALSE) # replace "hairpin"
+
+    # prepare the hairpin vector from the raw data list
+    tgtType <- unique(sapply(names(dataLst),
+                           function(x)unlist(strsplit(x, "_"))[3], simplify = TRUE)) # extract the unique target types
+    mergedLst <- sapply(tgtType, function(x){
+      tempLst <- dataLst[grep(x, names(dataLst))]
+      Dfm <- Reduce(function(i, j)merge(i[, c(2, 4)], j[, c(2, 4)], by = "miRNA_class", all = TRUE), tempLst)
+      names(Dfm)[-1] <- sapply(strsplit(names(tempLst), "_"), "[[", 1) # use the function "[[" and the argument ", 1" to select the first element of the list element
+      Dfm[is.na(Dfm) == TRUE] <- 0
+      Dfm <- unique(Dfm)
+      return(Dfm)
+    }, simplify = FALSE, USE.NAMES = TRUE)
+
+    dfm <- data.frame(mergedLst[[1]], stringsAsFactors = FALSE) # extract the hairpin lists and convert to dataframe
+    dfm <- dfm [, -1]
+    dfm <- as.matrix(dfm)
+    V <- dfm[,1]
+    V <- V[which(!V == 0)]
+    V <- unique(V)
+
+    # output fastq file as the training set
+    out <- subset(refDfm, hairpin %in% V)
+
+    out <- sapply(seq(nrow(out)), function(x){
+      tmpV <- rbind(out$annot[[x]], out$sequence[[x]])
+      return(tmpV)
+    }
+    )
+    out <- as.vector(out)
+
+    write.table(out, file = paste(deparse(substitute(dataLst)),".training.fastq", sep = ""),
+                quote = FALSE, row.names = FALSE, col.names = FALSE)
+}
+
+#' @title hairpinTest
+#'
+#' @description Produce a \code{.fasta} file as the test hairpin data set from the raw
+#' @param dataLst If or not to apply sample weight.
+#' @param refFileName Full directory and file name of ther reference.
+#' @return Outputs a \code{.fasta} file that can be used as the training set for novel miRNA discovery.
+#' @details Working with large reference file might result in long running time or system freezing, depending on the hardware configureation (mainly RAM). It is recommanded to build an index for the reference file prior to this operation when the file is large (multi-GB).
+#' @importFrom seqinr read.fasta
+#' @examples
+#' \dontrun{
+#' hairpinTest(refFileName = "~/OneDrive/Storey lab/current_work/miRNA_pipeline/reference/hairpin.fa", rawdataLst) # produce the hairpin training set
+#' }
+#' @export
+hairpinTest <- function(refFileName, dataLst){
   # load the original miRBase hairpin fasta files (reqinr::read.fasta) and convert RNA sequences into DNA sequences (U > T)
   ref <- read.fasta(file = refFileName, as.string = TRUE, forceDNAtolower = FALSE)
 
@@ -77,20 +124,10 @@ hairpinSets <- function(refFileName, dataLst){
   refDfm <- data.frame(hairpin = AttN, sequence = refSeq, annot = AttAno, stringsAsFactors = FALSE) # replace "hairpin"
 
   # prepare the hairpin vector from the raw data list
-  tgtType <- unique(sapply(names(dataLst),
+  tgtType <- unique(sapply(names(rawLstML),
                            function(x)unlist(strsplit(x, "_"))[3], simplify = TRUE)) # extract the unique target types
-  mergedLst <- sapply(tgtType, function(x){
-    tempLst <- dataLst[grep(x, names(dataLst))]
-    Dfm <- Reduce(function(i, j)merge(i[, c(2, 4)], j[, c(2, 4)], by = "miRNA_class", all = TRUE), tempLst)
-    names(Dfm)[-1] <- sapply(strsplit(names(tempLst), "_"), "[[", 1) # use the function "[[" and the argument ", 1" to select the first element of the list element
-    Dfm[is.na(Dfm) == TRUE] <- 0
-    Dfm <- unique(Dfm)
-    return(Dfm)
-  }, simplify = FALSE, USE.NAMES = TRUE)
 
-  dfm <- data.frame(mergedLst[[1]], stringsAsFactors = FALSE) # extract the hairpin lists and convert to dataframe
-  dfm <- dfm [, -1]
-  dfm <- as.matrix(dfm)
+  dfm <- rbind(rawLstML[[1]][2], rawLstML[[2]][2])
   V <- dfm[,1]
   V <- V[which(!V == 0)]
   V <- unique(V)
@@ -105,6 +142,6 @@ hairpinSets <- function(refFileName, dataLst){
   )
   out <- as.vector(out)
 
-  write.table(out, file = paste(deparse(substitute(dataLst)),".fastq", sep = ""),
+  write.table(out, file = paste(deparse(substitute(dataLst)),".test.fastq", sep = ""),
               quote = FALSE, row.names = FALSE, col.names = FALSE)
 }
