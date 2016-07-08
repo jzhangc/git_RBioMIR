@@ -9,12 +9,17 @@
 #' @param wd Working directory where all the read count \code{.txt} files are stored. Default is the current working directory.
 #' @details Make sure to follow the file name naming convention for the read count files: ID_database_targettype.txt
 #' @return Outputs a list with merged read counts from mutliple files, with annotation.
+#' @import parallel
 #' @examples
 #' \dontrun{
 #' readcountMerged <- mirProcess()
 #' }
 #' @export
 mirProcess <- function(wd = getwd()){
+  # setting up parallel computing
+  n_cores <- detectCores() - 1
+  cl <- makeCluster(n_cores)
+
   # locate to the working directory
   setwd(wd)
 
