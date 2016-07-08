@@ -51,7 +51,7 @@ mirProcessML <- function(wd = getwd()){
 #' hairpinTraining(refFileName = "~/OneDrive/Storey lab/current_work/miRNA_pipeline/reference/hairpin.fa", rawdataLst) # produce the hairpin training set
 #' }
 #' @export
-hairpinTrainingSet <- function(refFileName, dataLst){
+hairpinTraining <- function(refFileName, dataLst){
     # load the original miRBase hairpin fasta files (reqinr::read.fasta) and convert RNA sequences into DNA sequences (U > T)
     ref <- read.fasta(file = refFileName, as.string = TRUE, forceDNAtolower = FALSE)
 
@@ -97,7 +97,7 @@ hairpinTrainingSet <- function(refFileName, dataLst){
                 quote = FALSE, row.names = FALSE, col.names = FALSE)
 }
 
-#' @title hairpinTestSet
+#' @title hairpinTest
 #'
 #' @description Produce a \code{.fasta} file as the test hairpin data set from the raw
 #' @param dataLst If or not to apply sample weight.
@@ -110,7 +110,7 @@ hairpinTrainingSet <- function(refFileName, dataLst){
 #' hairpinTest(refFileName = "~/OneDrive/Storey lab/current_work/miRNA_pipeline/reference/hairpin.fa", rawdataLst) # produce the hairpin training set
 #' }
 #' @export
-hairpinTestSet <- function(refFileName, dataLst){
+hairpinTest <- function(refFileName, dataLst){
   # load the original miRBase hairpin fasta files (reqinr::read.fasta) and convert RNA sequences into DNA sequences (U > T)
   ref <- read.fasta(file = refFileName, as.string = TRUE, forceDNAtolower = FALSE)
 
