@@ -75,7 +75,6 @@ mirProcessML <- function(wd = getwd(), Type = "training"){
 #'
 #' @description Produce a \code{.fasta} file as the training hairpin data set from the raw read count files.
 #' @param dataLst If or not to apply sample weight.
-#' @param refFileName Full directory and file name of ther reference.
 #' @return Outputs a \code{.fasta} file that can be used as the training set for novel miRNA discovery.
 #' @details Working with large reference file might result in long running time or system freezing, depending on the hardware configureation (mainly RAM). It is recommanded to build an index for the reference file prior to this operation when the file is large (multi-GB).
 #' @import parallel
@@ -84,7 +83,7 @@ mirProcessML <- function(wd = getwd(), Type = "training"){
 #' hairpinTraining(refFileName = "~/OneDrive/Storey lab/current_work/miRNA_pipeline/reference/hairpin.fa", rawdataLst) # produce the hairpin training set
 #' }
 #' @export
-hairpinTraining <- function(refFileName, dataLst){
+hairpinTraining <- function(dataLst){
     # setting up parallel computing (using parallel package)
     n_cores <- detectCores() - 1
     cl <- makeCluster(n_cores)
@@ -120,7 +119,6 @@ hairpinTraining <- function(refFileName, dataLst){
 #'
 #' @description Produce a \code{.fasta} file as the test hairpin data set from the raw
 #' @param dataLst If or not to apply sample weight.
-#' @param refFileName Full directory and file name of ther reference.
 #' @return Outputs a \code{.fasta} file that can be used as the training set for novel miRNA discovery.
 #' @details Working with large reference file might result in long running time or system freezing, depending on the hardware configureation (mainly RAM). It is recommanded to build an index for the reference file prior to this operation when the file is large (multi-GB).
 #' @import parallel
@@ -129,7 +127,7 @@ hairpinTraining <- function(refFileName, dataLst){
 #' hairpinTest(refFileName = "~/OneDrive/Storey lab/current_work/miRNA_pipeline/reference/hairpin.fa", rawdataLst) # produce the hairpin training set
 #' }
 #' @export
-hairpinTest <- function(refFileName, dataLst){
+hairpinTest <- function(dataLst){
   # setting up parallel computing (using parallel package)
   n_cores <- detectCores() - 1
   cl <- makeCluster(n_cores)

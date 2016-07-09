@@ -4,11 +4,9 @@
 \alias{hairpinTraining}
 \title{hairpinTraining}
 \usage{
-hairpinTraining(refFileName, dataLst)
+hairpinTraining(dataLst)
 }
 \arguments{
-\item{refFileName}{Full directory and file name of ther reference.}
-
 \item{dataLst}{If or not to apply sample weight.}
 }
 \value{
