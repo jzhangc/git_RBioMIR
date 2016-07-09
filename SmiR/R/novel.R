@@ -112,7 +112,7 @@ hairpinTraining <- function(dataLst){
     # output fastq file as the training set
     rtpw <- readline("enter the root password: ")
     system("sudo -kS sh -c './training.smir'", input = rtpw)
-    system("sudo -kS sh -c 'rm trainingIds.tmp'")
+    system("sudo -kS sh -c 'rm trainingIds.tmp'", input = rtpw)
 }
 
 #' @title hairpinTest
@@ -145,5 +145,5 @@ hairpinTest <- function(dataLst){
   # output fastq file as the training set
   rtpw <- readline("enter the root password: ")
   system("sudo -kS sh -c './test.smir'", input = rtpw)
-  system("sudo -kS sh -c 'rm testIds.tmp'")
+  system("sudo -kS sh -c 'rm testIds.tmp'", input = rtpw)
 }
