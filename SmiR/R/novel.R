@@ -115,7 +115,7 @@ hairpinTraining <- function(refFileName, dataLst){
     }, simplify = FALSE, USE.NAMES = TRUE)
 
     dfm <- data.frame(mergedLst[[1]], stringsAsFactors = FALSE) # extract the hairpin lists and convert to dataframe
-    dfm <- dfm [, -1]
+    dfm <- dfm[, -1]
     dfm <- as.matrix(dfm)
     V <- dfm[,1]
     V <- V[which(!V == 0)]
