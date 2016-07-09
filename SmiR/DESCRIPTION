@@ -1,7 +1,7 @@
 Package: SmiR
 Type: Package
 Title: miRNA-Seq pipeline capable of analyzing conserved and novel miRNA for the animal species of interest
-Version: 0.1.1
+Version: 0.1.2
 Authors@R: person("Jing", "Zhang", email = "jzhangcad@gmail.com", role = c("aut", "cre"))
 Description: The package analyzes read counts from small RNA-seq experiments
 License: GPL-3
@@ -11,5 +11,5 @@ Imports:
     ggplot2 (>= 2.1.0),
     reshape2 (>= 1.4.1),
     gtable (>= 0.2.0), grid (>= 3.2.4),
-    seqinr (>= 3.1-5), parallel (>= 3.3.1)
+    parallel (>= 3.3.1)
 RoxygenNote: 5.0.1

@@ -21,9 +21,10 @@ mirProcessML <- function(wd = getwd(), Type = "training"){
   setwd(wd)
 
   # import the files
-  system("sudo -kS sh -c 'ls | grep .txt > filenames'", input = readline("Enter your password: ")) # call system conmand to extract the txt file name into a temporary file
+  rtpw <- readline("enter the root password: ")
+  system("sudo -kS sh -c 'ls | grep .txt > filenames'", input = rtpw) # call system conmand to extract the txt file name into a temporary file
   inputDfm <- read.table(file = "filenames", stringsAsFactors = FALSE) # read the content of the
-  system("sudo -kS rm filenames", input = readline("Enter your password: ")) # call system command to remove the temporary fle
+  system("sudo -kS rm filenames", input = rtpw) # call system command to remove the temporary fle
   colnames(inputDfm) <- "org.fileName"
   inputDfm$fileName <- sapply(inputDfm$org.fileName, function(x)unlist(strsplit(x, "\\."))[[1]], simplify = TRUE) # remove the extension of the file names
   inputDfm$targetType <- sapply(inputDfm$fileName, function(x)unlist(strsplit(x, "_"))[[3]], simplify =TRUE)
@@ -78,7 +79,6 @@ mirProcessML <- function(wd = getwd(), Type = "training"){
 #' @return Outputs a \code{.fasta} file that can be used as the training set for novel miRNA discovery.
 #' @details Working with large reference file might result in long running time or system freezing, depending on the hardware configureation (mainly RAM). It is recommanded to build an index for the reference file prior to this operation when the file is large (multi-GB).
 #' @import parallel
-#' @importFrom seqinr read.fasta
 #' @examples
 #' \dontrun{
 #' hairpinTraining(refFileName = "~/OneDrive/Storey lab/current_work/miRNA_pipeline/reference/hairpin.fa", rawdataLst) # produce the hairpin training set
@@ -89,18 +89,6 @@ hairpinTraining <- function(refFileName, dataLst){
     n_cores <- detectCores() - 1
     cl <- makeCluster(n_cores)
     on.exit(stopCluster(cl)) # close connection
-
-    # load the original miRBase hairpin fasta files (reqinr::read.fasta) and convert RNA sequences into DNA sequences (U > T)
-    ref <- read.fasta(file = refFileName, as.string = TRUE, forceDNAtolower = FALSE)
-
-    ref <- parLapply(cl, seq(ref), function(x)gsub("U", "T", ref[[x]])) # replace "U" with "T"
-
-    # extract attributes from the list
-    AttN <- parSapply(cl, seq(ref), function(i)attributes(ref[[i]])[[1]])
-    AttAno <- parSapply(cl, seq(ref), function(i)attributes(ref[[i]])[[2]])
-    refSeq <- unlist(ref)
-
-    refDfm <- data.frame(hairpin = AttN, sequence = refSeq, annot = AttAno, stringsAsFactors = FALSE) # replace "hairpin"
 
     # prepare the hairpin vector from the raw data list
     tgtType <- unique(sapply(names(dataLst),
@@ -120,20 +108,12 @@ hairpinTraining <- function(refFileName, dataLst){
     V <- dfm[,1]
     V <- V[which(!V == 0)]
     V <- unique(V)
+    write.table(V, file = "trainingIds.tmp", quote = FALSE, row.names = FALSE, col.names = FALSE)
 
     # output fastq file as the training set
-    out <- subset(refDfm, hairpin %in% V)
-
-    out <- parSapply(cl, seq(nrow(out)), function(x){
-      tmpV <- rbind(out$annot[[x]], out$sequence[[x]])
-      return(tmpV)
-    }
-    )
-    out <- as.vector(out)
-
-    write.table(out, file = paste(deparse(substitute(dataLst)),".training.fasta", sep = ""),
-                quote = FALSE, row.names = FALSE, col.names = FALSE)
-
+    rtpw <- readline("enter the root password: ")
+    system("sudo -kS sh -c './training.smir'", input = rtpw)
+    system("sudo -kS sh -c 'rm trainingIds.tmp'")
 }
 
 #' @title hairpinTest
@@ -144,7 +124,6 @@ hairpinTraining <- function(refFileName, dataLst){
 #' @return Outputs a \code{.fasta} file that can be used as the training set for novel miRNA discovery.
 #' @details Working with large reference file might result in long running time or system freezing, depending on the hardware configureation (mainly RAM). It is recommanded to build an index for the reference file prior to this operation when the file is large (multi-GB).
 #' @import parallel
-#' @importFrom seqinr read.fasta
 #' @examples
 #' \dontrun{
 #' hairpinTest(refFileName = "~/OneDrive/Storey lab/current_work/miRNA_pipeline/reference/hairpin.fa", rawdataLst) # produce the hairpin training set
@@ -156,18 +135,6 @@ hairpinTest <- function(refFileName, dataLst){
   cl <- makeCluster(n_cores)
   on.exit(stopCluster(cl)) # close connection
 
-  # load the original miRBase hairpin fasta files (reqinr::read.fasta) and convert RNA sequences into DNA sequences (U > T)
-  ref <- read.fasta(file = refFileName, as.string = TRUE, forceDNAtolower = FALSE)
-
-  ref <- parLapply(cl, seq(ref), function(x)gsub("U", "T", ref[[x]])) # replace "U" with "T"
-
-  # extract attributes from the list
-  AttN <- parSapply(cl, seq(ref), function(i)attributes(ref[[i]])[[1]])
-  AttAno <- parSapply(cl, seq(ref), function(i)attributes(ref[[i]])[[2]])
-  refSeq <- unlist(ref)
-
-  refDfm <- data.frame(hairpin = AttN, sequence = refSeq, annot = AttAno, stringsAsFactors = FALSE) # replace "hairpin"
-
   # prepare the hairpin vector from the raw data list
   dfm <- do.call(rbind, parLapply(cl, tstLst, data.frame, stringsAsFactors = FALSE))
   V <- dfm[, 2]
@@ -175,15 +142,10 @@ hairpinTest <- function(refFileName, dataLst){
   V <- unique(V)
 
   # output fastq file as the training set
-  out <- subset(refDfm, hairpin %in% V)
+  write.table(V, file = "testIds.tmp", quote = FALSE, row.names = FALSE, col.names = FALSE)
 
-  out <- parSapply(cl, seq(nrow(out)), function(x){
-    tmpV <- rbind(out$annot[[x]], out$sequence[[x]])
-    return(tmpV)
-  }
-  )
-  out <- as.vector(out)
-
-  write.table(out, file = paste(deparse(substitute(dataLst)),".test.fasta", sep = ""),
-              quote = FALSE, row.names = FALSE, col.names = FALSE)
+  # output fastq file as the training set
+  rtpw <- readline("enter the root password: ")
+  system("sudo -kS sh -c './test.smir'", input = rtpw)
+  system("sudo -kS sh -c 'rm testIds.tmp'")
 }
