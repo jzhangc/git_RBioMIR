@@ -2,7 +2,7 @@
 #'
 #' @description  data pre-processing for miRNA-seq read count files specific for machine learning (ML). This function only runs under unix or unix-like operating systems. see \code{\link{mirProcess}}.
 #' @param wd Working directory where all the read count \code{.txt} files are stored. Default is the current working directory.
-#' @param Type Type of output data set, training or test set. Options are \code{"training"} and \code{"test"}. Default is \code{"training"}.
+#' @param setType Type of output data set, training or test set. Options are \code{"training"} and \code{"test"}. Default is \code{"training"}.
 #' @details Make sure to follow the fie name naming convention for the read count files: ID_database_targettype.txt
 #' @return Outputs a list with merged read counts from mutliple files, with annotation. No merging inlcuded: see \code{\link{mirProcess}}.
 #' @import parallel
@@ -11,7 +11,7 @@
 #' readcountML <- mirProcessML()
 #' }
 #' @export
-mirProcessML <- function(wd = getwd(), Type = "training"){
+mirProcessML <- function(wd = getwd(), setType = "training"){
   # setting up parallel computing (using parallel package)
   n_cores <- detectCores() - 1
   cl <- makeCluster(n_cores)
@@ -31,7 +31,7 @@ mirProcessML <- function(wd = getwd(), Type = "training"){
   inputDfm$targetType <- factor(inputDfm$targetType, levels = c(unique(inputDfm$targetType)))
   inputDfm$experimentID <- sapply(inputDfm$fileName, function(x)unlist(strsplit(x, "_"))[[1]], simplify = TRUE)
 
-  if (Type == "test"){
+  if (setType == "test"){
     # parse the information and create a raw data list
     rawLstML <- parSapply(cl, inputDfm$fileName, function(x){
       temp <- read.table(file = paste(x, ".txt", sep=""), header = FALSE, stringsAsFactors = FALSE,
@@ -45,7 +45,7 @@ mirProcessML <- function(wd = getwd(), Type = "training"){
     }, simplify = FALSE, USE.NAMES = TRUE)
   }
 
-  if (Type == "training"){
+  if (setType == "training"){
     rawLstML <- parSapply(cl, inputDfm$fileName, function(x){
       temp <- read.table(file = paste(x, ".txt", sep=""), header = FALSE, stringsAsFactors = FALSE,
                          row.names = NULL)
@@ -71,79 +71,65 @@ mirProcessML <- function(wd = getwd(), Type = "training"){
   return(rawLstML)
 }
 
-#' @title hairpinTraining
+#' @title hairpinSet
 #'
-#' @description Produce a \code{.fasta} file as the training hairpin data set from the raw read count files.
-#' @param dataLst If or not to apply sample weight.
-#' @return Outputs a \code{.fasta} file that can be used as the training set for novel miRNA discovery.
-#' @details Working with large reference file might result in long running time or system freezing, depending on the hardware configureation (mainly RAM). It is recommanded to build an index for the reference file prior to this operation when the file is large (multi-GB).
+#' @description Produce a \code{.fasta} file as the training or test hairpin data set from the raw read count files. This function only works under Unix or Unix-like operating systems, with \code{pcregrep} installed.
+#' @param dataLst Data list produced by \code{\link{mirProcessML}}.
+#' @param setType The type of the output \code{fasta} file. Options are \code{"training"} or \code{"test"}. Default is \code{"training"}.
+#' @return Outputs a \code{.fasta} file that can be used as the training set for novel miRNA discovery. File names: training set \code{training.fasta}; test set \code{test.fasta}
+#' @details Working with large reference file might result in long running time or system freezing, depending on the hardware configureation (mainly RAM). It is recommanded to build an index for the reference file prior to this operation when the file is large (multi-GB). Be sure to follow the file name naming convetion for refrence files: training reference \code{trainingRef.fasta}; test reference \code{testRef.fasta}.
 #' @import parallel
 #' @examples
 #' \dontrun{
-#' hairpinTraining(refFileName = "~/OneDrive/Storey lab/current_work/miRNA_pipeline/reference/hairpin.fa", rawdataLst) # produce the hairpin training set
+#' mylist <- mirProcessML() # produce data list
+#' hairpinSet(mylist, setType = "training") # produce the hairpin training set
 #' }
 #' @export
-hairpinTraining <- function(dataLst){
+hairpinSet <- function(dataLst, setType = "training"){
     # setting up parallel computing (using parallel package)
     n_cores <- detectCores() - 1
     cl <- makeCluster(n_cores)
     on.exit(stopCluster(cl)) # close connection
-
-    # prepare the hairpin vector from the raw data list
-    tgtType <- unique(sapply(names(dataLst),
-                           function(x)unlist(strsplit(x, "_"))[3], simplify = TRUE)) # extract the unique target types
-    mergedLst <- parSapply(cl, tgtType, function(x){
-      tempLst <- dataLst[grep(x, names(dataLst))]
-      Dfm <- Reduce(function(i, j)merge(i[, c(2, 4)], j[, c(2, 4)], by = "miRNA_class", all = TRUE), tempLst)
-      names(Dfm)[-1] <- sapply(strsplit(names(tempLst), "_"), "[[", 1) # use the function "[[" and the argument ", 1" to select the first element of the list element
-      Dfm[is.na(Dfm) == TRUE] <- 0
-      Dfm <- unique(Dfm)
-      return(Dfm)
-    }, simplify = FALSE, USE.NAMES = TRUE)
-
-    dfm <- data.frame(mergedLst[[1]], stringsAsFactors = FALSE) # extract the hairpin lists and convert to dataframe
-    dfm <- dfm[, -1]
-    dfm <- as.matrix(dfm)
-    V <- dfm[,1]
-    V <- V[which(!V == 0)]
-    V <- unique(V)
-    write.table(V, file = "trainingIds.tmp", quote = FALSE, row.names = FALSE, col.names = FALSE)
-
-    # output fastq file as the training set
     rtpw <- readline("enter the root password: ")
-    system("sudo -kS sh -c './training.smir'", input = rtpw)
-    system("sudo -kS sh -c 'rm trainingIds.tmp'", input = rtpw)
-}
 
-#' @title hairpinTest
-#'
-#' @description Produce a \code{.fasta} file as the test hairpin data set from the raw
-#' @param dataLst If or not to apply sample weight.
-#' @return Outputs a \code{.fasta} file that can be used as the training set for novel miRNA discovery.
-#' @details Working with large reference file might result in long running time or system freezing, depending on the hardware configureation (mainly RAM). It is recommanded to build an index for the reference file prior to this operation when the file is large (multi-GB).
-#' @import parallel
-#' @examples
-#' \dontrun{
-#' hairpinTest(refFileName = "~/OneDrive/Storey lab/current_work/miRNA_pipeline/reference/hairpin.fa", rawdataLst) # produce the hairpin training set
-#' }
-#' @export
-hairpinTest <- function(dataLst){
-  # setting up parallel computing (using parallel package)
-  n_cores <- detectCores() - 1
-  cl <- makeCluster(n_cores)
-  on.exit(stopCluster(cl)) # close connection
+    if (setType == "training"){
+      # prepare the hairpin vector from the raw data list
+      tgtType <- unique(sapply(names(dataLst),
+                               function(x)unlist(strsplit(x, "_"))[3], simplify = TRUE)) # extract the unique target types
+      mergedLst <- parSapply(cl, tgtType, function(x){
+        tempLst <- dataLst[grep(x, names(dataLst))]
+        Dfm <- Reduce(function(i, j)merge(i[, c(2, 4)], j[, c(2, 4)], by = "miRNA_class", all = TRUE), tempLst)
+        names(Dfm)[-1] <- sapply(strsplit(names(tempLst), "_"), "[[", 1) # use the function "[[" and the argument ", 1" to select the first element of the list element
+        Dfm[is.na(Dfm) == TRUE] <- 0
+        Dfm <- unique(Dfm)
+        return(Dfm)
+      }, simplify = FALSE, USE.NAMES = TRUE)
 
-  # prepare the hairpin vector from the raw data list
-  dfm <- do.call(rbind, parLapply(cl, tstLst, data.frame, stringsAsFactors = FALSE))
-  V <- dfm[, 2]
-  V <- V[which(!V == 0)]
-  V <- unique(V)
+      dfm <- data.frame(mergedLst[[1]], stringsAsFactors = FALSE) # extract the hairpin lists and convert to dataframe
+      dfm <- dfm[, -1]
+      dfm <- as.matrix(dfm)
+      V <- dfm[,1]
+      V <- V[which(!V == 0)]
+      V <- unique(V)
+      write.table(V, file = "trainingIds.tmp", quote = FALSE, row.names = FALSE, col.names = FALSE)
 
-  # output fastq file as the training set
-  write.table(V, file = "testIds.tmp", quote = FALSE, row.names = FALSE, col.names = FALSE)
+      # output fastq file as the training set
+      system("sudo -kS sh -c './training.smir'", input = rtpw)
+      system("sudo -kS sh -c 'rm trainingIds.tmp'", input = rtpw)
+    }
 
-  # output fastq file as the training set
-  rtpw <- readline("enter the root password: ")
-  system("sudo -kS sh -c './test.smir'", input = rtpw)
-  system("sudo -kS sh -c 'rm testIds.tmp'", input = rtpw)
+    if (setType == "test"){
+      # prepare the hairpin vector from the raw data list
+      dfm <- do.call(rbind, parLapply(cl, tstLst, data.frame, stringsAsFactors = FALSE))
+      V <- dfm[, 2]
+      V <- V[which(!V == 0)]
+      V <- unique(V)
+
+      # output fastq file as the training set
+      write.table(V, file = "testIds.tmp", quote = FALSE, row.names = FALSE, col.names = FALSE)
+
+      # output fastq file as the training set
+      system("sudo -kS sh -c './test.smir'", input = rtpw)
+      system("sudo -kS sh -c 'rm testIds.tmp'", input = rtpw)
+    }
 }

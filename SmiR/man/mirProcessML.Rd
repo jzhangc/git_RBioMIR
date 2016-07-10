@@ -4,12 +4,12 @@
 \alias{mirProcessML}
 \title{mirProcessML}
 \usage{
-mirProcessML(wd = getwd(), Type = "training")
+mirProcessML(wd = getwd(), setType = "training")
 }
 \arguments{
 \item{wd}{Working directory where all the read count \code{.txt} files are stored. Default is the current working directory.}
 
-\item{Type}{Type of output data set, training or test set. Options are \code{"training"} and \code{"test"}. Default is \code{"training"}.}
+\item{setType}{Type of output data set, training or test set. Options are \code{"training"} and \code{"test"}. Default is \code{"training"}.}
 }
 \value{
 Outputs a list with merged read counts from mutliple files, with annotation. No merging inlcuded: see \code{\link{mirProcess}}.
