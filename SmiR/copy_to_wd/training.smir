@@ -1,1 +1,1 @@
-cat trainingIds.tmp | awk '{gsub("_","\\_",$0);$0="(?s)^>"$0".*?(?=\\n(\\z|>))"}1' | pcregrep -oM -f - trainingRef.fasta > trainingSet.fasta
+cat trainingIds.tmp | parallel --pipe -j+1 -q awk '{gsub("_","\\_",$0);$0="(?s)^>"$0".*?(?=\\n(\\z|>))"}1' | parallel --pipe -j+1 pcregrep -oM -f - trainingRef.fasta > positive_training.fasta
