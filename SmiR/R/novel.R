@@ -1,6 +1,6 @@
 #' @title mirProcessML
 #'
-#' @description  data pre-processing for miRNA-seq read count files specific for machine learning (ML). This function only runs under unix or unix-like operating systems. see \code{\link{mirProcess}}.
+#' @description  data pre-processing for miRNA-seq read count files specific for machine learning (ML). This function only runs under Unix or Unix-like operating systems. see \code{\link{mirProcess}}.
 #' @param wd Working directory where all the read count \code{.txt} files are stored. Default is the current working directory.
 #' @param setType Type of output data set, training or test set. Options are \code{"training"} and \code{"test"}. Default is \code{"training"}.
 #' @details Make sure to follow the fie name naming convention for the read count files: \code{ID_database_targettype.txt}
@@ -34,14 +34,14 @@ mirProcessML <- function(wd = getwd(), setType = "training"){
   if (setType == "test"){
     # parse the information and create a raw data list
     rawLstML <- parSapply(cl, inputDfm$fileName, function(x){
-    temp <- read.table(file = paste(x, ".txt", sep=""), header = FALSE, stringsAsFactors = FALSE,
+      temp <- read.table(file = paste(x, ".txt", sep=""), header = FALSE, stringsAsFactors = FALSE,
                          row.names = NULL)
-    temp <- temp[-1,]
-    colnames(temp)[1] <- "rawCount"
-    colnames(temp)[2] <- unlist(strsplit(x, "_"))[2]
+      temp <- temp[-1,]
+      colnames(temp)[1] <- "rawCount"
+      colnames(temp)[2] <- unlist(strsplit(x, "_"))[2]
 
-    row.names(temp) <- temp[,2]
-    return(temp)
+      row.names(temp) <- temp[,2]
+      return(temp)
     }, simplify = FALSE, USE.NAMES = TRUE)
   }
 
@@ -98,12 +98,12 @@ hairpinSet <- function(dataLst, setType = "training"){
       tgtType <- unique(sapply(names(dataLst),
                                function(x)unlist(strsplit(x, "_"))[3], simplify = TRUE)) # extract the unique target types
       mergedLst <- parSapply(cl, tgtType, function(x){
-      tempLst <- dataLst[grep(x, names(dataLst))]
-      Dfm <- Reduce(function(i, j)merge(i[, c(2, 4)], j[, c(2, 4)], by = "miRNA_class", all = TRUE), tempLst)
-      names(Dfm)[-1] <- sapply(strsplit(names(tempLst), "_"), "[[", 1) # use the function "[[" and the argument ", 1" to select the first element of the list element
-      Dfm[is.na(Dfm) == TRUE] <- 0
-      Dfm <- unique(Dfm)
-      return(Dfm)
+        tempLst <- dataLst[grep(x, names(dataLst))]
+        Dfm <- Reduce(function(i, j)merge(i[, c(2, 4)], j[, c(2, 4)], by = "miRNA_class", all = TRUE), tempLst)
+        names(Dfm)[-1] <- sapply(strsplit(names(tempLst), "_"), "[[", 1) # use the function "[[" and the argument ", 1" to select the first element of the list element
+        Dfm[is.na(Dfm) == TRUE] <- 0
+        Dfm <- unique(Dfm)
+        return(Dfm)
       }, simplify = FALSE, USE.NAMES = TRUE)
 
       dfm <- data.frame(mergedLst[[1]], stringsAsFactors = FALSE) # extract the hairpin lists and convert to dataframe

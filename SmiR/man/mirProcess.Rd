@@ -13,7 +13,7 @@ mirProcess(wd = getwd())
 Outputs a list with merged read counts from mutliple files, with annotation.
 }
 \description{
-data pre-processing for miRNA-seq read count files. This function only runs under unix or unix-like operating systems.
+data pre-processing for miRNA-seq read count files. This function only runs under Unix or Unix-like operating systems. See \code{\link{mirProcessML}}.
 }
 \details{
 Make sure to follow the file name naming convention for the read count files: \code{ID_database_targettype.txt}
