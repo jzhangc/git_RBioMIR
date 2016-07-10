@@ -34,37 +34,37 @@ mirProcessML <- function(wd = getwd(), setType = "training"){
   if (setType == "test"){
     # parse the information and create a raw data list
     rawLstML <- parSapply(cl, inputDfm$fileName, function(x){
-      temp <- read.table(file = paste(x, ".txt", sep=""), header = FALSE, stringsAsFactors = FALSE,
+    temp <- read.table(file = paste(x, ".txt", sep=""), header = FALSE, stringsAsFactors = FALSE,
                          row.names = NULL)
-      temp <- temp[-1,]
-      colnames(temp)[1] <- "rawCount"
-      colnames(temp)[2] <- unlist(strsplit(x, "_"))[2]
+    temp <- temp[-1,]
+    colnames(temp)[1] <- "rawCount"
+    colnames(temp)[2] <- unlist(strsplit(x, "_"))[2]
 
-      row.names(temp) <- temp[,2]
-      return(temp)
+    row.names(temp) <- temp[,2]
+    return(temp)
     }, simplify = FALSE, USE.NAMES = TRUE)
   }
 
   if (setType == "training"){
     rawLstML <- parSapply(cl, inputDfm$fileName, function(x){
-      temp <- read.table(file = paste(x, ".txt", sep=""), header = FALSE, stringsAsFactors = FALSE,
+    temp <- read.table(file = paste(x, ".txt", sep=""), header = FALSE, stringsAsFactors = FALSE,
                          row.names = NULL)
-      temp <- temp[-1,]
-      colnames(temp)[1] <- "rawCount"
-      colnames(temp)[2] <- unlist(strsplit(x, "_"))[3]
+    temp <- temp[-1,]
+    colnames(temp)[1] <- "rawCount"
+    colnames(temp)[2] <- unlist(strsplit(x, "_"))[3]
 
-      row.names(temp) <- temp[,2]
-      temp$species <- sapply(temp[[2]], function(i)unlist(strsplit(i, "-"))[1], simplify = TRUE)
+    row.names(temp) <- temp[,2]
+    temp$species <- sapply(temp[[2]], function(i)unlist(strsplit(i, "-"))[1], simplify = TRUE)
 
-      temp$miRNA_class <- sapply(temp[[2]], function(i)paste(unlist(strsplit(i, "-"))[2],
+    temp$miRNA_class <- sapply(temp[[2]], function(i)paste(unlist(strsplit(i, "-"))[2],
                                                              "-",
                                                              unlist(strsplit(i, "-"))[3],
                                                              sep = ""),
                                  simplify = TRUE)
 
-      temp$species <- factor(temp$species, levels = c(unique(temp$species)))
-      temp$miRNA_class <- factor(temp$miRNA_class, levels = c(unique(temp$miRNA_class)))
-      return(temp)
+    temp$species <- factor(temp$species, levels = c(unique(temp$species)))
+    temp$miRNA_class <- factor(temp$miRNA_class, levels = c(unique(temp$miRNA_class)))
+    return(temp)
     }, simplify = FALSE, USE.NAMES = TRUE)
   }
 
@@ -97,12 +97,12 @@ hairpinSet <- function(dataLst, setType = "training"){
       tgtType <- unique(sapply(names(dataLst),
                                function(x)unlist(strsplit(x, "_"))[3], simplify = TRUE)) # extract the unique target types
       mergedLst <- parSapply(cl, tgtType, function(x){
-        tempLst <- dataLst[grep(x, names(dataLst))]
-        Dfm <- Reduce(function(i, j)merge(i[, c(2, 4)], j[, c(2, 4)], by = "miRNA_class", all = TRUE), tempLst)
-        names(Dfm)[-1] <- sapply(strsplit(names(tempLst), "_"), "[[", 1) # use the function "[[" and the argument ", 1" to select the first element of the list element
-        Dfm[is.na(Dfm) == TRUE] <- 0
-        Dfm <- unique(Dfm)
-        return(Dfm)
+      tempLst <- dataLst[grep(x, names(dataLst))]
+      Dfm <- Reduce(function(i, j)merge(i[, c(2, 4)], j[, c(2, 4)], by = "miRNA_class", all = TRUE), tempLst)
+      names(Dfm)[-1] <- sapply(strsplit(names(tempLst), "_"), "[[", 1) # use the function "[[" and the argument ", 1" to select the first element of the list element
+      Dfm[is.na(Dfm) == TRUE] <- 0
+      Dfm <- unique(Dfm)
+      return(Dfm)
       }, simplify = FALSE, USE.NAMES = TRUE)
 
       dfm <- data.frame(mergedLst[[1]], stringsAsFactors = FALSE) # extract the hairpin lists and convert to dataframe
