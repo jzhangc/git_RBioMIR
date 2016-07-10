@@ -6,6 +6,7 @@
 #' @details Make sure to follow the fie name naming convention for the read count files: \code{ID_database_targettype.txt}
 #' @return Outputs a list with merged read counts from mutliple files, with annotation. No merging inlcuded: see \code{\link{mirProcess}}.
 #' @import parallel
+#' @importFrom getPass getPass
 #' @examples
 #' \dontrun{
 #' readcountML <- mirProcessML()
@@ -21,7 +22,7 @@ mirProcessML <- function(wd = getwd(), setType = "training"){
   setwd(wd)
 
   # import the files
-  rtpw <- readline("enter the root password: ")
+  rtpw <- getPass("enter the root password: ")
   system("sudo -kS sh -c 'ls | grep .txt > filenames'", input = rtpw) # call system conmand to extract the txt file name into a temporary file
   inputDfm <- read.table(file = "filenames", stringsAsFactors = FALSE) # read the content of the
   system("sudo -kS rm filenames", input = rtpw) # call system command to remove the temporary fle
@@ -80,6 +81,7 @@ mirProcessML <- function(wd = getwd(), setType = "training"){
 #' @details Although the function is optimized for parallel computing, working with large reference file might stil result in long running time or system freezing, depending on the hardware configureation (CPU cores and RAM). Be sure to follow the file name naming convetion for refrence files: training reference \code{trainingRef.fasta}; test reference \code{testRef.fasta}.
 #' @import parallel
 #' @importFrom data.table rbindlist
+#' @importFrom getPass getPass
 #' @examples
 #' \dontrun{
 #' mylist <- mirProcessML() # produce data list
@@ -91,7 +93,7 @@ hairpinSet <- function(dataLst, setType = "training"){
     n_cores <- detectCores() - 1
     cl <- makeCluster(n_cores)
     on.exit(stopCluster(cl)) # close connection
-    rtpw <- readline("enter the root password: ")
+    rtpw <- getPass("enter the root password: ")
 
     if (setType == "training"){
       # prepare the hairpin vector from the raw data list
