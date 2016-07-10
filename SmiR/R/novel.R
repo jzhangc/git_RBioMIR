@@ -79,6 +79,7 @@ mirProcessML <- function(wd = getwd(), setType = "training"){
 #' @return Outputs a \code{.fasta} file that can be used as the training set for novel miRNA discovery. File names: training set \code{trainingSet.fasta}; test set \code{testSet.fasta}
 #' @details Working with large reference file might result in long running time or system freezing, depending on the hardware configureation (mainly RAM). It is recommanded to build an index for the reference file prior to this operation when the file is large (multi-GB). Be sure to follow the file name naming convetion for refrence files: training reference \code{trainingRef.fasta}; test reference \code{testRef.fasta}.
 #' @import parallel
+#' @importFrom data.table rbindlist
 #' @examples
 #' \dontrun{
 #' mylist <- mirProcessML() # produce data list
@@ -120,7 +121,7 @@ hairpinSet <- function(dataLst, setType = "training"){
 
     if (setType == "test"){
       # prepare the hairpin vector from the raw data list
-      dfm <- do.call(rbind, parLapply(cl, tstLst, data.frame, stringsAsFactors = FALSE))
+      dfm <- as.data.frame(rbindlist(dataLst), stringAsFactors = FALSE) # from package data.table
       V <- dfm[, 2]
       V <- V[which(!V == 0)]
       V <- unique(V)
