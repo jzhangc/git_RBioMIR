@@ -32,29 +32,6 @@ mirProcessML <- function(wd = getwd(), setType = "training"){
   inputDfm$targetType <- factor(inputDfm$targetType, levels = c(unique(inputDfm$targetType)))
   inputDfm$experimentID <- sapply(inputDfm$fileName, function(x)unlist(strsplit(x, "_"))[[1]], simplify = TRUE)
 
-  if (setType == "training"){
-    rawLstML <- parSapply(cl, inputDfm$fileName, function(x){
-      temp <- read.table(file = paste(x, ".txt", sep=""), header = FALSE, stringsAsFactors = FALSE,
-                         row.names = NULL)
-      temp <- temp[-1,]
-      colnames(temp)[1] <- "rawCount"
-      colnames(temp)[2] <- unlist(strsplit(x, "_"))[3]
-
-      row.names(temp) <- temp[,2]
-      temp$species <- sapply(temp[[2]], function(i)unlist(strsplit(i, "-"))[1], simplify = TRUE)
-
-      temp$miRNA_class <- sapply(temp[[2]], function(i)paste(unlist(strsplit(i, "-"))[2],
-                                                             "-",
-                                                             unlist(strsplit(i, "-"))[3],
-                                                             sep = ""),
-                                 simplify = TRUE)
-
-      temp$species <- factor(temp$species, levels = c(unique(temp$species)))
-      temp$miRNA_class <- factor(temp$miRNA_class, levels = c(unique(temp$miRNA_class)))
-      return(temp)
-    }, simplify = FALSE, USE.NAMES = TRUE)
-  }
-
   if (setType == "test"){
     # parse the information and create a raw data list
     rawLstML <- parSapply(cl, inputDfm$fileName, function(x){
@@ -66,6 +43,29 @@ mirProcessML <- function(wd = getwd(), setType = "training"){
 
       row.names(temp) <- temp[,2]
       return(temp)
+    }, simplify = FALSE, USE.NAMES = TRUE)
+  }
+
+  if (setType == "training"){
+    rawLstML <- parSapply(cl, inputDfm$fileName, function(x){
+    temp <- read.table(file = paste(x, ".txt", sep=""), header = FALSE, stringsAsFactors = FALSE,
+                         row.names = NULL)
+    temp <- temp[-1,]
+    colnames(temp)[1] <- "rawCount"
+    colnames(temp)[2] <- unlist(strsplit(x, "_"))[3]
+
+    row.names(temp) <- temp[,2]
+    temp$species <- sapply(temp[[2]], function(i)unlist(strsplit(i, "-"))[1], simplify = TRUE)
+
+    temp$miRNA_class <- sapply(temp[[2]], function(i)paste(unlist(strsplit(i, "-"))[2],
+                                                             "-",
+                                                             unlist(strsplit(i, "-"))[3],
+                                                             sep = ""),
+                                 simplify = TRUE)
+
+    temp$species <- factor(temp$species, levels = c(unique(temp$species)))
+    temp$miRNA_class <- factor(temp$miRNA_class, levels = c(unique(temp$miRNA_class)))
+    return(temp)
     }, simplify = FALSE, USE.NAMES = TRUE)
   }
 
