@@ -12,13 +12,13 @@ hairpinSet(dataLst, setType = "training")
 \item{setType}{The type of the output \code{fasta} file. Options are \code{"training"} or \code{"test"}. Default is \code{"training"}.}
 }
 \value{
-Outputs a \code{.fasta} file that can be used as the training set for novel miRNA discovery. File names: training set \code{trainingSet.fasta}; test set \code{testSet.fasta}
+Outputs a \code{.fasta} file that can be used as the training set or test set for novel miRNA discovery. File names: training set \code{trainingSet.fasta}; test set \code{testSet.fasta}
 }
 \description{
 Produce a \code{.fasta} file as the training or test hairpin data set from the raw read count files. This function only works under Unix or Unix-like operating systems, with \code{pcregrep} installed.
 }
 \details{
-Working with large reference file might result in long running time or system freezing, depending on the hardware configureation (mainly RAM). It is recommanded to build an index for the reference file prior to this operation when the file is large (multi-GB). Be sure to follow the file name naming convetion for refrence files: training reference \code{trainingRef.fasta}; test reference \code{testRef.fasta}.
+Although the function is optimized for parallel computing, working with large reference file might stil result in long running time or system freezing, depending on the hardware configureation (CPU cores and RAM). Be sure to follow the file name naming convetion for refrence files: training reference \code{trainingRef.fasta}; test reference \code{testRef.fasta}.
 }
 \examples{
 \dontrun{
