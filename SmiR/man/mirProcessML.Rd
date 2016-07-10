@@ -18,7 +18,7 @@ Outputs a list with merged read counts from mutliple files, with annotation. No 
 data pre-processing for miRNA-seq read count files specific for machine learning (ML). This function only runs under unix or unix-like operating systems. see \code{\link{mirProcess}}.
 }
 \details{
-Make sure to follow the fie name naming convention for the read count files: ID_database_targettype.txt
+Make sure to follow the fie name naming convention for the read count files: \code{ID_database_targettype.txt}
 }
 \examples{
 \dontrun{

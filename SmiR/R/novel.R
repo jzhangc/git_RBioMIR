@@ -3,7 +3,7 @@
 #' @description  data pre-processing for miRNA-seq read count files specific for machine learning (ML). This function only runs under unix or unix-like operating systems. see \code{\link{mirProcess}}.
 #' @param wd Working directory where all the read count \code{.txt} files are stored. Default is the current working directory.
 #' @param setType Type of output data set, training or test set. Options are \code{"training"} and \code{"test"}. Default is \code{"training"}.
-#' @details Make sure to follow the fie name naming convention for the read count files: ID_database_targettype.txt
+#' @details Make sure to follow the fie name naming convention for the read count files: \code{ID_database_targettype.txt}
 #' @return Outputs a list with merged read counts from mutliple files, with annotation. No merging inlcuded: see \code{\link{mirProcess}}.
 #' @import parallel
 #' @examples

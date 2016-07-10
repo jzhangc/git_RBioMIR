@@ -16,7 +16,7 @@ Outputs a list with merged read counts from mutliple files, with annotation.
 data pre-processing for miRNA-seq read count files. This function only runs under unix or unix-like operating systems.
 }
 \details{
-Make sure to follow the file name naming convention for the read count files: ID_database_targettype.txt
+Make sure to follow the file name naming convention for the read count files: \code{ID_database_targettype.txt}
 }
 \examples{
 \dontrun{
