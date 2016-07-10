@@ -76,7 +76,7 @@ mirProcessML <- function(wd = getwd(), setType = "training"){
 #' @description Produce a \code{.fasta} file as the training or test hairpin data set from the raw read count files. This function only works under Unix or Unix-like operating systems, with \code{pcregrep} installed.
 #' @param dataLst Data list produced by \code{\link{mirProcessML}}.
 #' @param setType The type of the output \code{fasta} file. Options are \code{"training"} or \code{"test"}. Default is \code{"training"}.
-#' @return Outputs a \code{.fasta} file that can be used as the training set for novel miRNA discovery. File names: training set \code{training.fasta}; test set \code{test.fasta}
+#' @return Outputs a \code{.fasta} file that can be used as the training set for novel miRNA discovery. File names: training set \code{trainingSet.fasta}; test set \code{testSet.fasta}
 #' @details Working with large reference file might result in long running time or system freezing, depending on the hardware configureation (mainly RAM). It is recommanded to build an index for the reference file prior to this operation when the file is large (multi-GB). Be sure to follow the file name naming convetion for refrence files: training reference \code{trainingRef.fasta}; test reference \code{testRef.fasta}.
 #' @import parallel
 #' @examples
