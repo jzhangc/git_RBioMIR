@@ -5,4 +5,4 @@ For novel miRNA discovery, be sure to copy training.smir and test.smir files to 
 
 Installation:
     
-    devtools::install_github("jzhangc/git_SmiR_KBS/SmiR", repos = BiocInstaller::biocinstallRepos())    
+    devtools::install_github("jzhangc/git_RBioMIR/RBioMIR", repos = BiocInstaller::biocinstallRepos())    
