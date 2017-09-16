@@ -25,4 +25,3 @@ Make sure to follow the fie name naming convention for the read count files: \co
 readcountML <- mirProcessML()
 }
 }
-

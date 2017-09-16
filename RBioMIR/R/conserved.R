@@ -72,14 +72,20 @@ mirProcess <- function(wd = getwd()){
 
   tgtType <- unique(sapply(names(rawdataLst),
                            function(x)unlist(strsplit(x, "_"))[3], simplify = TRUE)) # extract the unique target types
+
   maxdataLstMg <- sapply(tgtType, function(x){
-    tempLst <- maxdataLst[grep(x, names(maxdataLst))]
-    Dfm <- Reduce(function(i, j)merge(i[, c(1, 4)], j[, c(1, 4)], by = "miRNA_class", all = TRUE), tempLst)
-    names(Dfm)[-1] <- sapply(strsplit(names(tempLst), "_"), "[[", 1) # use the function "[[" and the argument ", 1" to select the first element of the list element
+    tempLst <- lapply(maxdataLst[grep("miRNA", names(maxdataLst))], "[", c(1, 4)) # subset
+    tempLst <- lapply(tempLst, unique)
+    for (i in 1:length(tempLst)){
+      names(tempLst[[i]])[1] <- unlist(strsplit(names(tempLst[i]), "_"))[1]
+    }
+    Dfm <- Reduce(function(i, j)merge(i, j, by = "miRNA_class", all = TRUE), tempLst)
     Dfm[is.na(Dfm) == TRUE] <- 0
     Dfm <- unique(Dfm)
     return(Dfm)
   }, simplify = FALSE, USE.NAMES = TRUE)
+
+  maxdataLstMg <- maxdataLstMg[[1]]
 
   return(maxdataLstMg)
 }
@@ -115,17 +121,23 @@ mirNrm <- function(dfm, wgt = FALSE){
 #'
 #' @description Linear fitting and emperical Bayesian statistical test, with the capability of producing volcano distribution, among other useful plots.
 #' @param dfm Input dataframe.
+#' @param anno Annoation file for the samples. Format is \code{csv} and make sure the second column is for the conditions.
 #' @param fileName output file name. Be sure to use quatation
 #' @param wgt If or not to apply sample weight. Default is \code{FALSE}.
 #' @return Outputs a list with limma eBayes fitting, QC plots and a volcano distribution
-#' @importFrom limma voom voomWithQualityWeights plotMA plotSA lmFit eBayes topTable
+#' @importFrom limma voom voomWithQualityWeights plotMA plotSA lmFit eBayes topTable plotMDS
 #' @importFrom edgeR DGEList calcNormFactors
 #' @examples
 #' \dontrun{
 #' fitRNA <- mirFit(simDfm, wgt = TRUE)
 #' }
 #' @export
-mirFit <- function(dfm, fileName, wgt = FALSE){
+mirFit <- function(dfm, anno, fileName, wgt = FALSE){
+  # load annoation
+  SampleIndex <- read.csv(file = "condition.csv", header = TRUE, stringsAsFactors = FALSE, check.names = FALSE)
+  names(SampleIndex)[2] <- "Condition"
+
+  # normalization
   Nrm <- DGEList(counts = dfm[, -1], genes = dfm[1])
   Nrm <- calcNormFactors(Nrm)
   plotMDS(Nrm)
@@ -138,9 +150,6 @@ mirFit <- function(dfm, fileName, wgt = FALSE){
   }
 
   # desgin matrix
-  SampleIndex <- data.frame(Condition = sapply(colnames(Nrm), function(x)substr(x, nchar(x)-1, nchar(x))),
-                            Sample = colnames(Nrm), stringsAsFactors = FALSE)
-
   Exp<-factor(SampleIndex$Condition,levels=unique(SampleIndex$Condition))
   design<-model.matrix(~Exp)
 

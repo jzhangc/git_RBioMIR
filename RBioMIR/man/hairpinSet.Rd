@@ -26,4 +26,3 @@ mylist <- mirProcessML() # produce data list
 hairpinSet(mylist, setType = "training") # produce the hairpin training set
 }
 }
-

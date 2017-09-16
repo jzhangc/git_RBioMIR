@@ -29,4 +29,3 @@ Histogram. Also usable in most of the situations, expecially useful when end = 1
 mirPlot(miRNANrm, xTxtSize = 6, plotWidth = 360)
 }
 }
-

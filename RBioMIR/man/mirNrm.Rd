@@ -22,4 +22,3 @@ data Voom normalization for plotting
 simNrm <- mirnrm(simDfm, wgt = TRUE)
 }
 }
-

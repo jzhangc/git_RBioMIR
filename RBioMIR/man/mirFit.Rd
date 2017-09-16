@@ -4,10 +4,12 @@
 \alias{mirFit}
 \title{mirFit}
 \usage{
-mirFit(dfm, fileName, wgt = FALSE)
+mirFit(dfm, anno, fileName, wgt = FALSE)
 }
 \arguments{
 \item{dfm}{Input dataframe.}
+
+\item{anno}{Annoation file for the samples. Format is \code{csv} and make sure the second column is for the conditions.}
 
 \item{fileName}{output file name. Be sure to use quatation}
 
@@ -24,4 +26,3 @@ Linear fitting and emperical Bayesian statistical test, with the capability of p
 fitRNA <- mirFit(simDfm, wgt = TRUE)
 }
 }
-

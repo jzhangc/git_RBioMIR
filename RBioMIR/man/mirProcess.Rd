@@ -23,4 +23,3 @@ Make sure to follow the file name naming convention for the read count files: \c
 readcountMerged <- mirProcess()
 }
 }
-
