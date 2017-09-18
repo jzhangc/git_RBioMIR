@@ -167,13 +167,13 @@ mirFit <- function(dfm, anno, fileName, wgt = FALSE){
   exportTable <- topTable(fit = out[[1]], n = Inf, coef = attributes(design)[[2]][[2]][2], sort.by = "p", adjust.method = "fdr")
 
   # volcano plot
-  with(exportTable, plot(logFC, -log10(adj.P.Val), pch = 20, cex = 0.5, main = "Volcano plot"))
+  with(exportTable, plot(logFC, -log10(P.Value), pch = 20, cex = 0.5, main = "Volcano plot"))
 
   # Add colored points: red if padj < 0.05, orange of log2FC > 1, green if both)
-  with(subset(exportTable, adj.P.Val < 0.05 ), points(logFC, -log10(adj.P.Val), pch = 20, cex = 0.5, col = "red"))
-  with(subset(exportTable, abs(logFC) >= log2(1.5)), points(logFC, -log10(adj.P.Val), pch = 20, cex = 0.5,
+  with(subset(exportTable, adj.P.Val < 0.05 ), points(logFC, -log10(P.Value), pch = 20, cex = 0.5, col = "red"))
+  with(subset(exportTable, abs(logFC) >= log2(1.5)), points(logFC, -log10(P.Value), pch = 20, cex = 0.5,
                                                             col = "orange"))
-  with(subset(exportTable, adj.P.Val<.05 & abs(logFC) >= log2(1.5)), points(logFC, -log10(adj.P.Val),
+  with(subset(exportTable, adj.P.Val < 0.05 & abs(logFC) >= log2(1.5)), points(logFC, -log10(P.Value),
                                                                             pch = 20, cex = 0.5, col = "green"))
 
   # output
