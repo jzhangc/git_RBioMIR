@@ -135,7 +135,7 @@ mirNrm <- function(dfm, wgt = FALSE){
 #' @export
 mirFit <- function(dfm, anno, fileName, wgt = FALSE){
   # load annoation
-  SampleIndex <- read.csv(file = "condition.csv", header = TRUE, stringsAsFactors = FALSE, check.names = FALSE)
+  SampleIndex <- read.csv(file = anno, header = TRUE, stringsAsFactors = FALSE, check.names = FALSE)
   names(SampleIndex)[2] <- "Condition"
 
   # normalization
