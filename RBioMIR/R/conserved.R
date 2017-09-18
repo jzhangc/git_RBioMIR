@@ -23,6 +23,7 @@ mirProcess <- function(wd = getwd()){
   # setting up parallel computing
   n_cores <- detectCores() - 1
   cl <- makeCluster(n_cores)
+  on.exit(stopCluster(cl))
 
   # locate to the working directory
   setwd(wd)
