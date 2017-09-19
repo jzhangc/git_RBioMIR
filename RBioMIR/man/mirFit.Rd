@@ -4,14 +4,16 @@
 \alias{mirFit}
 \title{mirFit}
 \usage{
-mirFit(dfm, anno, fileName, wgt = FALSE)
+mirFit(dfm, anno, fileName, count_threshold = "none", wgt = FALSE)
 }
 \arguments{
 \item{dfm}{Input dataframe.}
 
 \item{anno}{Annoation file for the samples. Format is \code{csv} and make sure the second column is for the conditions.}
 
-\item{fileName}{output file name. Be sure to use quatation}
+\item{fileName}{output file name. Be sure to use quatation.}
+
+\item{count_threshold}{Read count threshold. No filtering will be applied when set \code{"none"}. Otherwise, a numeric number can be set as the minimum read count for filtering. DDefault is \code{"none"}.}
 
 \item{wgt}{If or not to apply sample weight. Default is \code{FALSE}.}
 }

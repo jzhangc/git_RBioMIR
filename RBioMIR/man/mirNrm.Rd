@@ -4,10 +4,12 @@
 \alias{mirNrm}
 \title{mirNrm}
 \usage{
-mirNrm(dfm, wgt = FALSE)
+mirNrm(dfm, count_threshold = "none", wgt = FALSE)
 }
 \arguments{
 \item{dfm}{Input dataframe.}
+
+\item{count_threshold}{Read count threshold. No filtering will be applied when set \code{"none"}. Otherwise, a numeric number can be set as the minimum read count for filtering. DDefault is \code{"none"}.}
 
 \item{wgt}{If or not to apply sample weight. Default is \code{FALSE}.}
 }

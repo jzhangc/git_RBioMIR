@@ -96,6 +96,7 @@ mirProcess <- function(wd = getwd()){
 #'
 #' @description  data Voom normalization for plotting
 #' @param dfm Input dataframe.
+#' @param count_threshold Read count threshold. No filtering will be applied when set \code{"none"}. Otherwise, a numeric number can be set as the minimum read count for filtering. DDefault is \code{"none"}.
 #' @param wgt If or not to apply sample weight. Default is \code{FALSE}.
 #' @return Outputs a dataframe with voom normalization
 #' @importFrom limma voom voomWithQualityWeights
@@ -105,8 +106,17 @@ mirProcess <- function(wd = getwd()){
 #' simNrm <- mirnrm(simDfm, wgt = TRUE)
 #' }
 #' @export
-mirNrm <- function(dfm, wgt = FALSE){
+mirNrm <- function(dfm, count_threshold = "none", wgt = FALSE){
   Nrm <- DGEList(counts = dfm[, -1], genes = dfm[1])
+  # filtering
+  if (count_threshold != "none"){ # set the count threshold for filtering
+    count_s <- rowSums(Nrm$counts) # thresholdd
+    isexpr <- count_s > count_threshold
+
+    Nrm <- Nrm[isexpr, , keep.lib.size = FALSE] # filtering
+  }
+
+  # normalization
   Nrm <- calcNormFactors(Nrm)
   if (wgt == FALSE){
     Nrm <- voom(Nrm)
@@ -123,7 +133,8 @@ mirNrm <- function(dfm, wgt = FALSE){
 #' @description Linear fitting and emperical Bayesian statistical test, with the capability of producing volcano distribution, among other useful plots.
 #' @param dfm Input dataframe.
 #' @param anno Annoation file for the samples. Format is \code{csv} and make sure the second column is for the conditions.
-#' @param fileName output file name. Be sure to use quatation
+#' @param fileName output file name. Be sure to use quatation.
+#' @param count_threshold Read count threshold. No filtering will be applied when set \code{"none"}. Otherwise, a numeric number can be set as the minimum read count for filtering. DDefault is \code{"none"}.
 #' @param wgt If or not to apply sample weight. Default is \code{FALSE}.
 #' @return Outputs a list with limma eBayes fitting, QC plots and a volcano distribution
 #' @importFrom limma voom voomWithQualityWeights plotMA plotSA lmFit eBayes topTable plotMDS
@@ -133,13 +144,21 @@ mirNrm <- function(dfm, wgt = FALSE){
 #' fitRNA <- mirFit(simDfm, wgt = TRUE)
 #' }
 #' @export
-mirFit <- function(dfm, anno, fileName, wgt = FALSE){
+mirFit <- function(dfm, anno, fileName, count_threshold = "none", wgt = FALSE){
   # load annoation
   SampleIndex <- read.csv(file = anno, header = TRUE, stringsAsFactors = FALSE, check.names = FALSE)
   names(SampleIndex)[2] <- "Condition"
 
-  # normalization
   Nrm <- DGEList(counts = dfm[, -1], genes = dfm[1])
+  # filtering
+  if (count_threshold != "none"){ # set the count threshold for filtering
+    count_s <- rowSums(Nrm$counts) # thresholdd
+    isexpr <- count_s > count_threshold
+
+    Nrm <- Nrm[isexpr, , keep.lib.size = FALSE] # filtering
+  }
+
+  # normalization
   Nrm <- calcNormFactors(Nrm)
   plotMDS(Nrm)
 
