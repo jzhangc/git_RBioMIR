@@ -1,12 +1,3 @@
-.onAttach <- function(libname, pkgname) {
-  packageStartupMessage("
-                        Written by Jing Zhang, Ph.D. Please direct questions to jzhangcad@gmail.com.
-
-                        (test only) For novel miRNA discovery, be sure to copy training.smir and test.smir files
-                        to your working directory, and install pcregrep and parallel commands.")
-  return(TRUE)
-}
-
 #' @title mirProcess
 #'
 #' @description  data pre-processing for miRNA-seq read count files. This function only runs under Unix or Unix-like operating systems. See \code{\link{mirProcessML}}.
@@ -100,7 +91,7 @@ mirProcess <- function(wd = getwd()){
 #' @param wgt If or not to apply sample weight. Default is \code{FALSE}.
 #' @return Outputs a dataframe with voom normalization
 #' @importFrom limma voom voomWithQualityWeights
-#' @importFrom edgeR DGEList calcNormFactors
+#' @import edgeR
 #' @examples
 #' \dontrun{
 #' simNrm <- mirnrm(simDfm, wgt = TRUE)
