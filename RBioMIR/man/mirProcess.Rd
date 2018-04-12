@@ -4,10 +4,12 @@
 \alias{mirProcess}
 \title{mirProcess}
 \usage{
-mirProcess(wd = getwd())
+mirProcess(wd = getwd(), superuser = FALSE)
 }
 \arguments{
 \item{wd}{Working directory where all the read count \code{.txt} files are stored. Default is the current working directory.}
+
+\item{superuser}{Wether or not call the function as super user. A password input window will appear. Default is \code{FALSE}.}
 }
 \value{
 Outputs a list with merged read counts from mutliple files, with annotation.

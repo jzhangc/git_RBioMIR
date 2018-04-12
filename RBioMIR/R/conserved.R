@@ -2,15 +2,17 @@
 #'
 #' @description  data pre-processing for miRNA-seq read count files. This function only runs under Unix or Unix-like operating systems. See \code{\link{mirProcessML}}.
 #' @param wd Working directory where all the read count \code{.txt} files are stored. Default is the current working directory.
+#' @param superuser Wether or not call the function as super user. A password input window will appear. Default is \code{FALSE}.
 #' @details Make sure to follow the file name naming convention for the read count files: \code{ID_database_targettype.txt}
 #' @return Outputs a list with merged read counts from mutliple files, with annotation.
+#' @importFrom getPass getPass
 #' @import parallel
 #' @examples
 #' \dontrun{
 #' readcountMerged <- mirProcess()
 #' }
 #' @export
-mirProcess <- function(wd = getwd()){
+mirProcess <- function(wd = getwd(), superuser = FALSE){
   # setting up parallel computing
   n_cores <- detectCores() - 1
   cl <- makeCluster(n_cores)
@@ -20,10 +22,17 @@ mirProcess <- function(wd = getwd()){
   setwd(wd)
 
   # import the files
-  rtpw <- getPass("enter the root password: ")
-  system("sudo -kS ls | grep .txt > filenames", input = rtpw) # call system conmand to extract the txt file name into a temporary file
-  inputDfm <- read.table(file = "filenames", stringsAsFactors = FALSE) # read the content of the
-  system("sudo -kS rm filenames", input = rtpw) # call system command to remove the temporary fle
+  if (superuser){
+    rtpw <- getPass("enter the root password: ")
+    system("sudo -kS ls | grep .txt > filenames", input = rtpw)  # call system conmand to extract the txt file name into a temporary file
+    inputDfm <- read.table(file = "filenames", stringsAsFactors = FALSE) # read the content of the
+    system("sudo -kS rm filenames", input = rtpw) # call system command to remove the temporary fle
+  } else {
+    system("ls | grep .txt > filenames")  # call system conmand to extract the txt file name into a temporary file
+    inputDfm <- read.table(file = "filenames", stringsAsFactors = FALSE) # read the content of the
+    system("rm filenames") # call system command to remove the temporary fle
+  }
+
   colnames(inputDfm) <- "org.fileName"
   inputDfm$fileName <- sapply(inputDfm$org.fileName, function(x)unlist(strsplit(x, "\\."))[[1]], simplify = TRUE) # remove the extension of the file names
   inputDfm$targetType <- sapply(inputDfm$fileName, function(x)unlist(strsplit(x, "_"))[[3]], simplify =TRUE)
