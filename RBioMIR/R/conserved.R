@@ -20,10 +20,9 @@ mirProcess <- function(wd = getwd()){
   setwd(wd)
 
   # import the files
-  rtpw <- getPass("enter the root password: ")
-  system("sudo -kS ls | grep .txt > filenames", input = rtpw) # call system conmand to extract the txt file name into a temporary file
+  system("ls | grep .txt > filenames") # call system conmand to extract the txt file name into a temporary file
   inputDfm <- read.table(file = "filenames", stringsAsFactors = FALSE) # read the content of the
-  system("sudo -kS rm filenames", input = rtpw) # call system command to remove the temporary fle
+  system("rm filenames") # call system command to remove the temporary fle
   colnames(inputDfm) <- "org.fileName"
   inputDfm$fileName <- sapply(inputDfm$org.fileName, function(x)unlist(strsplit(x, "\\."))[[1]], simplify = TRUE) # remove the extension of the file names
   inputDfm$targetType <- sapply(inputDfm$fileName, function(x)unlist(strsplit(x, "_"))[[3]], simplify =TRUE)
