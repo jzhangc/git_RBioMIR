@@ -3,28 +3,24 @@
 #
 # ------ usage -------
 # ./mirna_rocessing.sh -c -r [raw file directory] -a [adapter file name and full path] -p [CPU core number]
-# -h: show help information
-# -C: cut nucleotides from 5'
-# -c: cut nucleotides from 3'
-# -r: raw file path
-# -a: adapter file with full path
-# -p: cpu core number
+# -h: Help information
+# -i <dir>: Input raw file path
+# -a <file>: Adapter file with full path
+# -C <int>: Cut nucleotides from 5'
+# -c <int>: Cut nucleotides from 3'
+# -n <file>: Negative reference with full path
+# -m <file>: Mature miRNA reference with full path
+# -s <file>: Stemloop/hairpin reference with full path
+# -t: If to change U to T for the reference files
+# -p <int>: Cpu core number
  
 # ------ variables ------
-# script internal variables
-NTCUT=0  # initiate flag if to cut the nucleotides. initial value 0(false)
-U2T=0  # initiate flag if to change U to T for reference files. initial value 0(false)
-NT5=0  # initiate variable for cutting nucleotides from 5'
-NT3=0  # initiate variable for cutting nucleotides from 3'
-NEGIDX=0  # initiate flag to build bowtie negative reference index
-POSIDX=0 # initiate flag to build bowtie positive reference index
-
 # variables from command options
 if [ $# -eq 0 ]; then # without any argument: display help file
 	echo "TBC help messages from no options" >&2
     exit 0
 else
-	while getopts ":hti:a:C:c:n:r:p:" opt; do  # :hr: means :h and :r:
+	while getopts ":hti:a:C:c:n:m:p:" opt; do  # :hr: means :h and :r:
   		case $opt in
   			h)
   				echo -e "\n"
@@ -54,20 +50,34 @@ else
     			NT3=-$OPTARG
     			;;
     		n)  # flag to build bowtie index for negative ref
-    			NEGIDX=1
     			NEGREF=$OPTARG
     			if ! [ -f $NEGREF ]; then  # if not ...
     			echo "-n requires a negative reference file in fasta or fa format." >&2
     			exit 1
     			fi
+    			    			
+    			# extract reference file names
+				NEGREF_PATH_NAME_WO_EXT="${NEGREF%%.*}"
     			;;
-    		r)  # flag to build bowtie index for negative ref
-    			POSIDX=1
-    			POSREF=$OPTARG
-    			if ! [ -f $POSREF ]; then  # if not ...
-    			echo "-r requires a reference genome file in fasta or fa format." >&2
+    		m)  # flag to build bowtie index for mature miRNA ref
+    			MREF=$OPTARG
+    			if ! [ -f $MREF ]; then  # if not ...
+    			echo "-m requires a reference genome file in fasta or fa format." >&2
     			exit 1
     			fi
+    			
+    			# extract reference file names
+    			MREF_PATH_NAME_WO_EXT="${MREF%%.*}"
+    			;;
+    		s)  # flag to build bowtie index for stemloop/hairpin ref
+    			SREF=$OPTARG
+    			if ! [ -f $SREF ]; then  # if not ...
+    			echo "-m requires a reference genome file in fasta or fa format." >&2
+    			exit 1
+    			fi
+    			
+    			# extract reference file names
+    			SREF_PATH_NAME_WO_EXT="${SREF%%.*}"
     			;;
     		p)
     			CORES=$OPTARG
@@ -92,8 +102,8 @@ else
 fi
 
 # ------ functions ------
-# function to check if commands are installed
-command_check (){	
+# functions to check if commands are installed
+check_brew_app (){
 	# Homebrew applications
 	for i in bowtie fastqc samtools; do
 		echo -en "	$i..."
@@ -116,35 +126,38 @@ command_check (){
 				exit 1	
 			fi
 		fi
-	done	
-	
+	done
+}
+
+check_other_app (){
 	# conda/pip applications
-	for j in cutadapt multiqc; do
-		echo -en "	$j..."
+	for i in cutadapt multiqc; do
+		echo -en "	$i..."
 		# sleep 1 # for testing only
-		if hash $j 2>/dev/null; then
+		if hash $i 2>/dev/null; then
 			echo -e "Pass!"
 		else
 			echo -e "Fail!"
 			if hash conda 2>/dev/null; then
 				echo -e "	-------------------------------------"
 				echo -e "		Package manager conda detected!"
-				echo -e "		Install $j through conda..."
-				conda install -c bioconda $j
+				echo -e "		Install $i through conda..."
+				conda install -c bioconda $i
 				echo -e "	-------------------------------------\n"	
 			elif hash pip 2>/dev/null; then
 				echo -e "	-------------------------------------"
 				echo -e "		Package manager pip detected!"
-				echo -e "		Install $j through pip..."
-				pip install $j
+				echo -e "		Install $i through pip..."
+				pip install $i
 				echo -e "	-------------------------------------\n"
 			else
-				echo -e "Package manager not found for multiqc installation. Script terminated. \n"
+				echo -e "Package manager not found for $i installation. Script terminated. \n"
 				exit 1	
 			fi
 		fi
 	done
 }
+
 
 # function to qc
 qc (){	
@@ -154,6 +167,7 @@ qc (){
 		[ -f "$i" ] || break  # this line prevents from processing *.fastq or *.fastq.gz if file doesn't exist
 		echo -en "	Runing QC on `basename $i`..."
 		fastqc "$i" --outdir=./QC_OUT/ 2>>./LOG/qc.log 1>>./LOG/qc.log # fastqc uses &2 for display
+		echo -e "\n" >>./LOG/qc.log
 		echo -e "Done!"
 	done
 }
@@ -163,8 +177,8 @@ adapter_trim (){
 	# loop through fastq files for cutadapt
 	for i in $1/*.fastq.gz $1/*.fastq; do
 		[ -f "$i" ] || break
-		outname=`basename $i`  # NOTE: use ``, not "" or ''
-		echo -en "	Trimming adapters from `basename $i`..."
+		outname=`basename "$i"`  # NOTE: use ``, not "" or ''
+		echo -en "	Trimming adapters from $outname..."
 		# below: cutadapt uses &2 for display system message, &1 for on-screen display messages
 		cutadapt -b file:$2 -o ./TRIM_OUT/adapter_trimmed_$outname \
 		"$i" \
@@ -184,49 +198,74 @@ adapter_trim (){
 	done	
 }
 
-# bowtie function
-align_foo (){
+# bowtie functions
+idx_check (){
 	# change U to T
 	if [ $U2T -eq 1 ]; then
-		echo -en "	Change Us to Ts for positive reference..."
-		sed -i '.bak' 's/U/T/g' $POSREF
+		echo -en "	Change Us to Ts for mature miRNA reference..."
+		sed -i '.bak' 's/U/T/g' $MREF
 		echo -e "Done!"
-		echo -en "	Change Us to Ts for positive reference..."
+		echo -en "	Change Us to Ts for stemloop/hairpin reference..."
+		sed -i '.bak' 's/U/T/g' $SREF
+		echo -e "Done!"
+		echo -en "	Change Us to Ts for negative reference..."
 		sed -i '.bak' 's/U/T/g' $NEGREF
 		echo -e "Done!"
 		echo -e "	-------------------------------------"
 	fi
 	
-	# extract reference file names
-	neg_name="${NEGREF%.*}"
-	pos_name="${POSREF%.*}"
-	
-	# build bowtie index if chosen
-	if [ $NEGIDX -eq 1 ]; then
+	# test if index exists, build if not
+	neg_path=`dirname $NEGREF`  # extract negative ref path
+	neg_name=`basename $NEGREF_PATH_NAME_WO_EXT`	
+	echo -en "	Checking bowtie index for negative reference..."	
+	if [ `ls $neg_path/$neg_name.*.ebwt 2>/dev/null | wc -l` -gt 0 ]; then
+		echo -e "Found!"
+	else
+		echo -e "Not found!"
 		echo -en "	Building bowtie index for negative reference..."
-		bowtie-build $NEGREF $neg_name 1>>bowtie_idx.log
+		bowtie-build $NEGREF $NEGREF_PATH_NAME_WO_EXT 1>>bowtie_idx.log
 		echo -e "Done!"
 	fi
 	
-	if [ $POSIDX -eq 1 ]; then
-		echo -en "	Building bowtie index for positive reference..."
-		bowtie-build $POSREF $pos_name 1>>./LOG/bowtie_idx.log
+	mature_path=`dirname $MREF`  # extract mature miRNA ref path
+	mature_name=`basename $MREF_PATH_NAME_WO_EXT`
+	echo -en "	Checking bowtie index for mature miRNA reference..."	
+	if [ `ls $mature_path/$mature_name.*.ebwt 2>/dev/null | wc -l` -gt 0 ]; then
+		echo -e "Found!"
+	else
+		echo -e "Not found!"
+		echo -en "	Building bowtie index for mature miRNA reference..."
+		bowtie-build $MREF $MREF_PATH_NAME_WO_EXT 1>>./LOG/bowtie_idx.log
 		echo -e "Done!"
 	fi
 	
-	# bowtie negative align
-	echo -e "	-------------------------------------"			
+	haripin_path=`dirname $SREF`  # extract mature miRNA ref path
+	hairpin_name=`basename $SREF_PATH_NAME_WO_EXT`
+	echo -en "	Checking bowtie index for stemloop/hairpin reference..."	
+	if [ `ls $haripin_path/$hairpin_name.*.ebwt 2>/dev/null | wc -l` -gt 0 ]; then
+		echo -e "Found!"
+	else
+		echo -e "Not found!"
+		echo -en "	Building bowtie index for stemloop/hairpin reference..."
+		bowtie-build $SREF $SREF_PATH_NAME_WO_EXT 1>>./LOG/bowtie_idx.log
+		echo -e "Done!"
+	fi
+}
+
+neg_align (){	
 	if [ $NTCUT -eq 1 ]; then   # look for nt trimmed files first
 		for i in $1/nt*.fastq.gz $1/nt*.fastq; do	
 			[ -f "$i" ] || break
-			neg_outname=`basename $i`
+			neg_outname=`basename "$i"`
+			neg_outname_wo_ext="${neg_outname##*_}"  # no extra crap with extension
+			neg_outname_wo_ext="${neg_outname_wo_ext%%.*}"   # no extension
 			echo -en "	Removing negative reads from $neg_outname..."
 			echo -e "File: $neg_outname" >> ./LOG/bowtie_neg_results.log  # file name for log
 			# below: bowtie command
-			bowtie -p $CORES -q $neg_name \
+			bowtie -q -p $CORES $NEGREF_PATH_NAME_WO_EXT \
 			"$i" \
-			--un ./BOWTIE_OUT/NEG_UNALIGN_OUT/neg_flt_$neg_outname \
-			--al ./BOWTIE_OUT/NEG_ALIGN_OUT/neg_$neg_outname \
+			--un ./BOWTIE_OUT/NEG_UNALIGN_OUT/neg_unaglin_$neg_outname_wo_ext.fastq \
+			--al ./BOWTIE_OUT/NEG_ALIGN_OUT/neg_$neg_outname_wo_ext.fastq \
 			1>/dev/null 2>>./LOG/bowtie_neg_results.log  # discard flying message
 			echo -e "\n" >> ./LOG/bowtie_neg_results.log
 			echo -e "Done!"			
@@ -234,45 +273,88 @@ align_foo (){
 	else 
 		for i in $1/adapter*.fastq.gz $1/adapter*.fastq; do
 			[ -f "$i" ] || break
-			neg_outname=`basename $i`
+			neg_outname=`basename "$i"`
+			neg_outname_wo_ext="${neg_outname##*_}"  # no extra crap with extension
+			neg_outname_wo_ext="${neg_outname_wo_ext%%.*}" # no extension
 			echo -en "	Removing negative reads from $neg_outname..."   # file name for log
 			echo -e "File: $neg_outname" >> ./LOG/bowtie_neg_results.log
 			# below: bowtie command
-			bowtie -p $CORES -q $neg_name \
+			bowtie -q -p $CORES $NEGREF_PATH_NAME_WO_EXT \
 			"$i" \
-			--un ./BOWTIE_OUT/NEG_UNALIGN_OUT/neg_flt_$neg_outname \
-			--al ./BOWTIE_OUT/NEG_ALIGN_OUT/neg_$neg_outname \
+			--un ./BOWTIE_OUT/NEG_UNALIGN_OUT/neg_unalign_$neg_outname_wo_ext.fastq \
+			--al ./BOWTIE_OUT/NEG_ALIGN_OUT/neg_$neg_outname_wo_ext.fastq \
 			1>/dev/null 2>>./LOG/bowtie_neg_results.log  # discard flying message
 			echo -e "\n" >> ./LOG/bowtie_neg_results.log
 			echo -e "Done!"
 		done			
-	fi
-	
-	# bowtie positive align
-	echo -e "	-------------------------------------"
-	for j in ./BOWTIE_OUT/NEG_UNALIGN_OUT/*.fastq.gz ./BOWTIE_OUT/NEG_UNALIGN_OUT/*.fastq; do	
-		[ -f "$j" ] || break
-		pos_outname=`basename $j`
-		pos_outname=${pos_outname%.*.*}  # get file name without extension
-		echo -en "	Aligning $pos_outname to positive reference..."
-		echo -e "File: $pos_outname" >> ./LOG/bowtie_pos_results.log
-		bowtie -p $CORES -q -S -l 20 -n 0 -v 2 -a --best --strata $pos_name "$j" --al ./BOWTIE_OUT/POS_ALIGN_OUT/pos_$pos_outname.sam --un ./BOWTIE_OUT/POS_UNALIGN_OUT/pos_unaligned_$pos_outname.sam 1>/dev/null 2>>./LOG/bowtie_pos_results.log # discard flying message
-		echo -e "\n" >> ./LOG/bowtie_pos_results.log
-		echo -e "Done!"		
-	done	
+	fi	
 }
 
+mature_align (){
+	for i in ./BOWTIE_OUT/NEG_UNALIGN_OUT/*.fastq; do	
+		[ -f "$i" ] || break
+		mature_outname=`basename "$i"`
+		mature_outname_wo_ext="${mature_outname##*_}"  # no extra crap with extension
+		mature_outname_wo_ext="${mature_outname_wo_ext%%.*}"  # get file name without extension		
+		echo -en "	Aligning $mature_outname to mature miRNA reference..."
+		echo -e "File: $mature_outname" >> ./LOG/bowtie_mature_results.log
+		# below: the way to do "command 2>file | command2": { command | command 2; } 2>file
+		{ bowtie --best --strata -a -q -S -l 20 -n 0 -v 2 \
+			--un ./BOWTIE_OUT/MATURE_UNALIGN_OUT/mature_unalign_$mature_outname_wo_ext.fastq -p $CORES \
+			$MREF_PATH_NAME_WO_EXT "$i" | samtools view -SbhF4 -o ./BOWTIE_OUT/MATURE_ALIGN_OUT/mature_$mature_outname_wo_ext.bam; } \
+		1>/dev/null 2>>./LOG/bowtie_mature_results.log
+		echo -e "\n" >>./LOG/bowtie_mature_results.log
+		echo -e "Done!"	
+	done
+}
+
+# timing function
+# from: https://www.shellscript.sh/tips/hms/
+hms(){
+  # Convert Seconds to Hours, Minutes, Seconds
+  # Optional second argument of "long" makes it display
+  # the longer format, otherwise short format.
+  local SECONDS H M S MM H_TAG M_TAG S_TAG
+  SECONDS=${1:-0}
+  let S=${SECONDS}%60
+  let MM=${SECONDS}/60 # Total number of minutes
+  let M=${MM}%60
+  let H=${MM}/60
+  
+  if [ "$2" == "long" ]; then
+    # Display "1 hour, 2 minutes and 3 seconds" format
+    # Using the x_TAG variables makes this easier to translate; simply appending
+    # "s" to the word is not easy to translate into other languages.
+    [ "$H" -eq "1" ] && H_TAG="hour" || H_TAG="hours"
+    [ "$M" -eq "1" ] && M_TAG="minute" || M_TAG="minutes"
+    [ "$S" -eq "1" ] && S_TAG="second" || S_TAG="seconds"
+    [ "$H" -gt "0" ] && printf "%d %s " $H "${H_TAG},"
+    [ "$SECONDS" -ge "60" ] && printf "%d %s " $M "${M_TAG} and"
+    printf "%d %s\n" $S "${S_TAG}"
+  else
+    # Display "01h02m03s" format
+    [ "$H" -gt "0" ] && printf "%02d%s" $H "h"
+    [ "$M" -gt "0" ] && printf "%02d%s" $M "m"
+    printf "%02d%s\n" $S "s"
+  fi
+}
 
 # ------ script ------
+# start time
+start_t=`date +%s`
+
+# display messages
 echo -e "\n"
 echo -e "Script written by Jing Zhang PhD"
 echo -e "Contact: jzha9@uwo.ca, jzhangcad@gmail.com"
 echo -e "To cite in your research: TBA"
+
 # command check
 echo -e "\n"
 echo -e "Checking all the necessary applications:"
 echo -e "=========================================================================="
-command_check
+check_brew_app
+check_other_app
 echo -e "=========================================================================="
 
 # create folders
@@ -285,10 +367,12 @@ echo -en "Making output file folders..."
 [ -d ./BOWTIE_OUT ] || mkdir ./BOWTIE_OUT
 [ -d ./BOWTIE_OUT/NEG_ALIGN_OUT ] || mkdir ./BOWTIE_OUT/NEG_ALIGN_OUT
 [ -d ./BOWTIE_OUT/NEG_UNALIGN_OUT ] || mkdir ./BOWTIE_OUT/NEG_UNALIGN_OUT
-[ -d ./BOWTIE_OUT/POS_ALIGN_OUT ] || mkdir ./BOWTIE_OUT/POS_ALIGN_OUT
-[ -d ./BOWTIE_OUT/POS_UNALIGN_OUT ] || mkdir ./BOWTIE_OUT/POS_UNALIGN_OUT
+[ -d ./BOWTIE_OUT/MATURE_ALIGN_OUT ] || mkdir ./BOWTIE_OUT/MATURE_ALIGN_OUT
+[ -d ./BOWTIE_OUT/MATURE_UNALIGN_OUT ] || mkdir ./BOWTIE_OUT/MATURE_UNALIGN_OUT
+[ -d ./BOWTIE_OUT/HAIRPIN_ALIGN_OUT ] || mkdir ./BOWTIE_OUT/HAIRPIN_ALIGN_OUT
 [ -d ./BOWTIE_OUT/HAIRPIN_UNALIGN_OUT ] || mkdir ./BOWTIE_OUT/HAIRPIN_UNALIGN_OUT
 [ -d ./READCOUNTS_OUT ] || mkdir ./READCOUNTS_OUT
+[ -d ./READCOUNTS_OUT/SORTED_BAM ] || mkdir ./READCOUNTS_OUT/SORTED_BAM
 echo -e "Done!"
 echo -e "=========================================================================="
 echo -e "	Folders created and their usage:"
@@ -320,6 +404,7 @@ echo -e "=======================================================================
 qc ./TRIM_OUT
 echo -e "	-------------------------------------"
 echo -en "	Compiling QC results into a single report..."
+echo -e "\n" >>./LOG/qc.log
 multiqc ./QC_OUT/ -o ./QC_OUT/MULTIQC_OUT -n multiqc_all.html 1>>./LOG/qc.log 2>>./LOG/qc.log
 echo -e "Done!"
 echo -e "=========================================================================="
@@ -328,5 +413,16 @@ echo -e "=======================================================================
 echo -e "\n"
 echo -e "Bowtie alignment (speed depending on hardware configurations):"
 echo -e "=========================================================================="
-align_foo ./TRIM_OUT
+idx_check
+echo -e "	-------------------------------------"
+neg_align ./TRIM_OUT
+echo -e "	-------------------------------------"
+mature_align
 echo -e "=========================================================================="
+
+# end time and display
+end_t=`date +%s`
+tot=`hms $((end_t-start_t))`
+echo -e "\n"
+echo -e "Total run time: $tot"
+echo -e "\n"
