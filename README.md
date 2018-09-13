@@ -7,9 +7,7 @@ To cite in publication
     
 
 NOTE:
-
-  - Currently the package is for Unix-like system only (e.g., Linux or macOS).
-  - (for testing only) For novel miRNA discovery, be sure to copy training.smir and test.smir files to your working directory, and install pcregrep and parallel commands.
+  - (For testing only) For novel miRNA discovery, be sure to copy training.smir and test.smir files to your working directory, and install pcregrep and parallel commands.
 
 
 Installation:
@@ -31,13 +29,24 @@ Installation:
   - Install development build
   
         devtools::install_github("jzhangc/git_RBioArray/RBioArray", repos = BiocInstaller::biocinstallRepos(), ref = "beta")  
-
+        
 
 Update log
 
-    0.1.8 (Feature preview)
-    (ICEBOX)
-      - mirProcess() re-written
-      - A preview of UNIX Shell program mirna_processing added
-      - Other updates
-        - Information page updated
+    0.2.0 (Feature preview)
+      (ICEBOX)
+        - New functions
+      
+      (ADDED)
+        - Updates to exisiting functions:
+          - mirProcess() re-written, with:
+            - simplied code base
+            - foreach implementation of parallel computing
+            - compatibility for UNIX/UNIX-like/Windows systems
+            - non-mandatory naming convention for input .txt read count files
+            - ability to take annotation file
+            - output in S3 object "mir_count"
+            
+         - A preview of UNIX Shell program mirna_processing added
+         - Other updates
+            - Information page updated

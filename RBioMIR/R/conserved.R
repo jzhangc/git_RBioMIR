@@ -1,94 +1,122 @@
 #' @title mirProcess
 #'
-#' @description  data pre-processing for miRNA-seq read count files. This function only runs under Unix or Unix-like operating systems. See \code{\link{mirProcessML}}.
-#' @param wd Working directory where all the read count \code{.txt} files are stored. Default is the current working directory.
-#' @param superuser Wether or not call the function as super user. A password input window will appear. Default is \code{FALSE}.
-#' @details Make sure to follow the file name naming convention for the read count files: \code{ID_database_targettype.txt}
-#' @return Outputs a list with merged read counts from mutliple files, with annotation.
-#' @importFrom getPass getPass
-#' @import parallel
+#' @description Data pre-processing for miRNA-seq read count files. Also eee \code{\link{mirProcessML}}.
+#' @param path Path to raw files. Default is the system working directory.
+#' @param raw.file.sep Raw read count file separators. Default is \code{""\"\"}, i.e. white space.
+#' @param species Species code, following the three letter naming convention.
+#' @param target.annot.file Annotation file describing filenames and targets, and should be in \code{csv} format.
+#' @param database MiRNA database, only for miRNA naming conventions. Currently the function only takes "mirbase".
+#' @param parallelComputing Wether to use parallel computing or not. Default is \code{TRUE}.
+#' @param cluterType clusterType Only set when \code{parallelComputing = TRUE}, the type for parallel cluster. Options are \code{"PSOCK"} (all operating systems) and \code{"FORK"} (macOS and Unix-like system only). Default is \code{"PSOCK"}.
+#' @details When \code{species} left as \code{NULL}, the function will use all the species detected in the raw read count files.
+#'          The raw count files are usually in \code{.txt} format with "read count" and "mirna" columns. The read count files can be obtained using the shell program \code{mirna_processing}.
+#' @return Outputs a \code{mirna_count} with merged read counts from mutliple files, with annotation.
+#' @import foreach
+#' @import doParallel
+#' @importFrom parallel detectCores makeCluster stopCluster
 #' @examples
 #' \dontrun{
 #' readcountMerged <- mirProcess()
 #' }
 #' @export
-mirProcess <- function(wd = getwd(), superuser = FALSE){
-  # setting up parallel computing
-  n_cores <- detectCores() - 1
-  cl <- makeCluster(n_cores)
-  on.exit(stopCluster(cl))
+mirProcess <- function(path = getwd(), raw.file.sep = "",
+                       species = NULL, target.annot.file = NULL, database = "mirbase",
+                       parallelComputing = FALSE, clusterType = "FORK"){
+  ## check argument
+  annot_name_length <- length(unlist(strsplit(target.annot.file, "\\.")))
+  annot_ext <- unlist(strsplit(target.annot.file, "\\."))[annot_name_length]
+  if (!database %in% c("mirbase")) stop("For now, the function only accepts database = \"mirbase\".")
 
-  # locate to the working directory
-  setwd(wd)
-
-  # import the files
-  if (superuser){
-    rtpw <- getPass("enter the root password: ")
-    system("sudo -kS ls | grep .txt > filenames", input = rtpw)  # call system conmand to extract the txt file name into a temporary file
-    inputDfm <- read.table(file = "filenames", stringsAsFactors = FALSE) # read the content of the
-    system("sudo -kS rm filenames", input = rtpw) # call system command to remove the temporary fle
+  ## load files
+  # check and load annotation
+  if (is.null(target.annot.file) | annot_ext != "csv"){
+    tgt <- NULL
   } else {
-    system("ls | grep .txt > filenames")  # call system conmand to extract the txt file name into a temporary file
-    inputDfm <- read.table(file = "filenames", stringsAsFactors = FALSE) # read the content of the
-    system("rm filenames") # call system command to remove the temporary fle
+    cat("Loading target annotation file...")
+    tgt <- read.csv(file = target.annot.file, header = TRUE, stringsAsFactors = FALSE, check.names = FALSE)
+    cat("Done!\n")
   }
 
-  colnames(inputDfm) <- "org.fileName"
-  inputDfm$fileName <- sapply(inputDfm$org.fileName, function(x)unlist(strsplit(x, "\\."))[[1]], simplify = TRUE) # remove the extension of the file names
-  inputDfm$targetType <- sapply(inputDfm$fileName, function(x)unlist(strsplit(x, "_"))[[3]], simplify =TRUE)
-  inputDfm$targetType <- factor(inputDfm$targetType, levels = c(unique(inputDfm$targetType)))
-  inputDfm$experimentID <- sapply(inputDfm$fileName, function(x)unlist(strsplit(x, "_"))[[1]], simplify = TRUE)
+  # set read files
+  filename <- list.files(path = path, pattern = ".txt")
+  filename_wo_ext <- sub("[.][^.]*$", "", filename)  # general expression to remove extension, i.e. a.b.c becomes a.b
 
-  # parse the information and create a raw data list
-  rawdataLst <- sapply(inputDfm$fileName, function(x){
-    temp <- read.table(file = paste(x, ".txt", sep=""), header = FALSE, stringsAsFactors = FALSE,
-                       row.names = NULL)
-    temp <- temp[-1,]
-    colnames(temp)[1] <- "rawCount"
-    colnames(temp)[2] <- unlist(strsplit(x, "_"))[3]
+  # load reads
+  cat("Processing read files...")
+  raw_list <- vector(mode = "list", length = length(filename))
+  if (!parallelComputing){ # single core
+    raw_list[] <- foreach(i = filename) %do% {
+      tmp <- read.table(file = i, header = FALSE, sep = raw.file.sep, stringsAsFactors = FALSE,
+                        col.names = c("read_count", "mirna"), row.names = NULL)
+      tmp <- tmp[, c(2, 1)]
 
-    row.names(temp) <- temp[,2]
-
-    temp$species <- sapply(temp[[2]], function(i)unlist(strsplit(i, "-"))[1], simplify = TRUE)
-
-    temp$miRNA_class <- sapply(temp[[2]], function(i)paste(unlist(strsplit(i, "-"))[2],
-                                                           "-",
-                                                           unlist(strsplit(i, "-"))[3],
-                                                           sep = ""),
-                               simplify = TRUE)
-
-    temp$species <- factor(temp$species, levels = c(unique(temp$species)))
-    temp$miRNA_class <- gsub("-NA", "", temp$miRNA_class) # remove the -NA string that appears when the mirbase id is like xxx-miRXXX
-    temp$miRNA_class <- factor(temp$miRNA_class, levels = c(unique(temp$miRNA_class)))
-    return(temp)
-  }, simplify = FALSE, USE.NAMES = TRUE)
-
-  # combine the dataframes to generate count table for stats #
-  # sidenote: seq(mylist) has the same effect of seq(length(mylist))
-  # ave(): similar to tapply(), but WAY faster and doesn't have the length problem.
-  maxdataLst <- sapply(names(rawdataLst),
-                       function(x)rawdataLst[[x]][rawdataLst[[x]]$rawCount == ave(rawdataLst[[x]]$rawCount,
-                                                                                  rawdataLst[[x]]$miRNA_class, FUN = max),],
-                       simplify = FALSE, USE.NAMES = TRUE)
-
-  tgtType <- unique(sapply(names(rawdataLst),
-                           function(x)unlist(strsplit(x, "_"))[3], simplify = TRUE)) # extract the unique target types
-
-  maxdataLstMg <- sapply(tgtType, function(x){
-    tempLst <- lapply(maxdataLst[grep("miRNA", names(maxdataLst))], "[", c(1, 4)) # subset
-    tempLst <- lapply(tempLst, unique)
-    for (i in 1:length(tempLst)){
-      names(tempLst[[i]])[1] <- unlist(strsplit(names(tempLst[i]), "_"))[1]
+      tmp$species <- sapply(tmp$mirna, function(m)unlist(strsplit(m, "-"))[1], simplify = TRUE)
+      tmp$mirna_class <- sapply(tmp$mirna, function(n)paste(unlist(strsplit(n, "-"))[2],
+                                                            "-",
+                                                            unlist(strsplit(n, "-"))[3],
+                                                            sep = ""), simplify = TRUE)
+      tmp
     }
-    Dfm <- Reduce(function(i, j)merge(i, j, by = "miRNA_class", all = TRUE), tempLst)
-    Dfm[is.na(Dfm) == TRUE] <- 0
-    Dfm <- unique(Dfm)
-    return(Dfm)
-  }, simplify = FALSE, USE.NAMES = TRUE)
+  } else {  # parallel
+    # set clusters
+    n_cores <- detectCores() - 1
+    cl <- makeCluster(n_cores, clusterType = clusterType)
+    registerDoParallel(cl)
+    on.exit(stopCluster(cl)) # close connect when exiting the function
 
-  maxdataLstMg <- maxdataLstMg[[1]]
+    # file processing
+    raw_list[] <- foreach(i = filename, .packages = "foreach") %dopar% {
+      tmp <- read.table(file = i, header = FALSE, sep = raw.file.sep, stringsAsFactors = FALSE,
+                        col.names = c("read_count", "mirna"), row.names = NULL)
+      tmp <- tmp[, c(2, 1)]
 
-  return(maxdataLstMg)
+      tmp$species <- sapply(tmp$mirna, function(m)unlist(strsplit(m, "-"))[1], simplify = TRUE)
+      tmp$mirna_class <- sapply(tmp$mirna, function(n)paste(unlist(strsplit(n, "-"))[2],
+                                                            "-",
+                                                            unlist(strsplit(n, "-"))[3],
+                                                            sep = ""), simplify = TRUE)
+      tmp
+    }
+  }
+
+  names(raw_list) <- filename_wo_ext
+  cat("Done!\n")
+
+  # file loaded message
+  cat("\n")
+  cat("Files loaded: \n")
+  for (i in filename){
+    cat(paste0("\t", i, "\n"))
+  }
+
+  # get and check species
+  tot_species <- foreach(i = raw_list, .combine = "c") %do% i$species
+  tot_species <- unique(tot_species)
+  if (is.null(species) | !all(species %in% tot_species)){
+    warning("Set species not all found in data, or species not set. Proceed with all species (may be very slow).")
+    species <- tot_species
+  }
+
+  ## merge reads
+  species_list <- vector(mode = "list", length = length(filename))
+  species_list <- foreach(i = 1:length(filename)) %do% {
+    tmpdfm <- raw_list[[i]][raw_list[[i]]$species %in% species, ]
+    tmpdfm <- tmpdfm[, c("mirna", "read_count")]
+    names(tmpdfm)[2] <- filename_wo_ext[i]
+    tmpdfm
+  }
+  names(species_list) <- filename_wo_ext
+
+  out_dfm <- Reduce(function(i, j)merge(i, j, all = TRUE), species_list)
+  out_dfm[is.na(out_dfm) == TRUE] <- 0
+
+  ## output
+  out <- list(raw_read_count = out_dfm,
+              target = tgt,
+              species = species,
+              tot_species = tot_species)
+  class(out) <- "mir_count"
+  return(out)
 }
 
 

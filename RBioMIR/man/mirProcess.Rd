@@ -4,21 +4,34 @@
 \alias{mirProcess}
 \title{mirProcess}
 \usage{
-mirProcess(wd = getwd(), superuser = FALSE)
+mirProcess(path = getwd(), raw.file.sep = "", species = NULL,
+  target.annot.file = NULL, database = "mirbase",
+  parallelComputing = FALSE, clusterType = "FORK")
 }
 \arguments{
-\item{wd}{Working directory where all the read count \code{.txt} files are stored. Default is the current working directory.}
+\item{path}{Path to raw files. Default is the system working directory.}
 
-\item{superuser}{Wether or not call the function as super user. A password input window will appear. Default is \code{FALSE}.}
+\item{raw.file.sep}{Raw read count file separators. Default is \code{""\"\"}, i.e. white space.}
+
+\item{species}{Species code, following the three letter naming convention.}
+
+\item{target.annot.file}{Annotation file describing filenames and targets, and should be in \code{csv} format.}
+
+\item{database}{MiRNA database, only for miRNA naming conventions. Currently the function only takes "mirbase".}
+
+\item{parallelComputing}{Wether to use parallel computing or not. Default is \code{TRUE}.}
+
+\item{cluterType}{clusterType Only set when \code{parallelComputing = TRUE}, the type for parallel cluster. Options are \code{"PSOCK"} (all operating systems) and \code{"FORK"} (macOS and Unix-like system only). Default is \code{"PSOCK"}.}
 }
 \value{
-Outputs a list with merged read counts from mutliple files, with annotation.
+Outputs a \code{mirna_count} with merged read counts from mutliple files, with annotation.
 }
 \description{
-data pre-processing for miRNA-seq read count files. This function only runs under Unix or Unix-like operating systems. See \code{\link{mirProcessML}}.
+Data pre-processing for miRNA-seq read count files. Also eee \code{\link{mirProcessML}}.
 }
 \details{
-Make sure to follow the file name naming convention for the read count files: \code{ID_database_targettype.txt}
+When \code{species} left as \code{NULL}, the function will use all the species detected in the raw read count files.
+         The raw count files are usually in \code{.txt} format with "read count" and "mirna" columns. The read count files can be obtained using the shell program \code{mirna_processing}.
 }
 \examples{
 \dontrun{
