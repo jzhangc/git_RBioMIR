@@ -8,7 +8,7 @@ To cite in publication
 
 NOTE:
   - (For testing only) For novel miRNA discovery, be sure to copy training.smir and test.smir files to your working directory, and install pcregrep and parallel commands.
-
+  - Small RNA RNAseq file processing program mirna_processing.sh only supports UNIX/UNIX-like systems. 
 
 Installation:
 
@@ -28,7 +28,7 @@ Installation:
 
   - Install development build
   
-        devtools::install_github("jzhangc/git_RBioArray/RBioArray", repos = BiocInstaller::biocinstallRepos(), ref = "beta")  
+        devtools::install_github("jzhangc/git_RBioMIR/RBioMIR", repos = BiocInstaller::biocinstallRepos(), ref = "beta")  
         
 
 Update log
