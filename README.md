@@ -1,10 +1,15 @@
 # RBioMIR
 miRNA-seq analysis package
 
-- Currently the package is for Unix-like system only (e.g., Linux or macOS).
-- (for testing only) For novel miRNA discovery, be sure to copy training.smir and test.smir files to your working directory, and install pcregrep and parallel commands.
+To cite in publication
+  
+    Zhang J, Hadj-Moussa H, Storey KB. 2016. Current progress of high-throughput microRNA differential expression analysis and random forest gene selection for model and non-model systems: an R implementation. J Integr Bioinform. 13: 306.
+    
 
-Installation:
+NOTE:
+
+  - Currently the package is for Unix-like system only (e.g., Linux or macOS).
+  - (for testing only) For novel miRNA discovery, be sure to copy training.smir and test.smir files to your working directory, and install pcregrep and parallel commands.
 
 
 Installation:
