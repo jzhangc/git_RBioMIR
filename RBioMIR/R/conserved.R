@@ -77,7 +77,6 @@ mirProcess <- function(path = getwd(), species = NULL, target.annot.file = NULL,
       tmp
     }
   }
-
   names(raw_list) <- filename_wo_ext
   cat("Done!\n")
 
@@ -106,10 +105,9 @@ mirProcess <- function(path = getwd(), species = NULL, target.annot.file = NULL,
   }
   names(species_list) <- filename_wo_ext
 
+  ## output
   out_dfm <- Reduce(function(i, j)merge(i, j, all = TRUE), species_list)
   out_dfm[is.na(out_dfm) == TRUE] <- 0
-
-  ## output
   out <- list(raw_read_count = out_dfm,
               target = tgt,
               selected_species = species,
