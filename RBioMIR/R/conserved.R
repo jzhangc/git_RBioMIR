@@ -19,8 +19,7 @@
 #' readcountMerged <- mirProcess()
 #' }
 #' @export
-mirProcess <- function(path = getwd(), raw.file.sep = "",
-                       species = NULL, target.annot.file = NULL, database = "mirbase",
+mirProcess <- function(path = getwd(), species = NULL, target.annot.file = NULL, database = "mirbase", raw.file.sep = "",
                        parallelComputing = FALSE, clusterType = "FORK"){
   ## check argument
   annot_name_length <- length(unlist(strsplit(target.annot.file, "\\.")))
@@ -42,11 +41,11 @@ mirProcess <- function(path = getwd(), raw.file.sep = "",
   filename_wo_ext <- sub("[.][^.]*$", "", filename)  # general expression to remove extension, i.e. a.b.c becomes a.b
 
   # load reads
-  cat("Processing read files...")
+  cat("Processing read count files...")
   raw_list <- vector(mode = "list", length = length(filename))
   if (!parallelComputing){ # single core
     raw_list[] <- foreach(i = filename) %do% {
-      tmp <- read.table(file = i, header = FALSE, sep = raw.file.sep, stringsAsFactors = FALSE,
+      tmp <- read.table(file = paste0(path, "/", i), header = FALSE, sep = raw.file.sep, stringsAsFactors = FALSE,
                         col.names = c("read_count", "mirna"), row.names = NULL)
       tmp <- tmp[, c(2, 1)]
 
@@ -66,7 +65,7 @@ mirProcess <- function(path = getwd(), raw.file.sep = "",
 
     # file processing
     raw_list[] <- foreach(i = filename, .packages = "foreach") %dopar% {
-      tmp <- read.table(file = i, header = FALSE, sep = raw.file.sep, stringsAsFactors = FALSE,
+      tmp <- read.table(file = paste0(path, "/", i), header = FALSE, sep = raw.file.sep, stringsAsFactors = FALSE,
                         col.names = c("read_count", "mirna"), row.names = NULL)
       tmp <- tmp[, c(2, 1)]
 
@@ -113,7 +112,7 @@ mirProcess <- function(path = getwd(), raw.file.sep = "",
   ## output
   out <- list(raw_read_count = out_dfm,
               target = tgt,
-              species = species,
+              selected_species = species,
               tot_species = tot_species)
   class(out) <- "mir_count"
   return(out)

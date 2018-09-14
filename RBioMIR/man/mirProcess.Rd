@@ -4,20 +4,20 @@
 \alias{mirProcess}
 \title{mirProcess}
 \usage{
-mirProcess(path = getwd(), raw.file.sep = "", species = NULL,
-  target.annot.file = NULL, database = "mirbase",
-  parallelComputing = FALSE, clusterType = "FORK")
+mirProcess(path = getwd(), species = NULL, target.annot.file = NULL,
+  database = "mirbase", raw.file.sep = "", parallelComputing = FALSE,
+  clusterType = "FORK")
 }
 \arguments{
 \item{path}{Path to raw files. Default is the system working directory.}
-
-\item{raw.file.sep}{Raw read count file separators. Default is \code{""\"\"}, i.e. white space.}
 
 \item{species}{Species code, following the three letter naming convention.}
 
 \item{target.annot.file}{Annotation file describing filenames and targets, and should be in \code{csv} format.}
 
 \item{database}{MiRNA database, only for miRNA naming conventions. Currently the function only takes "mirbase".}
+
+\item{raw.file.sep}{Raw read count file separators. Default is \code{""\"\"}, i.e. white space.}
 
 \item{parallelComputing}{Wether to use parallel computing or not. Default is \code{TRUE}.}
 
