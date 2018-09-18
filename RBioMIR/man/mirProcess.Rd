@@ -11,7 +11,7 @@ mirProcess(path = getwd(), species = NULL, target.annot.file = NULL,
 \arguments{
 \item{path}{Path to raw files. Default is the system working directory.}
 
-\item{species}{Species code, following the three letter naming convention.}
+\item{species}{Species code, following the traditional abbreviated naming convention, e.g. "hsa", "mmu".}
 
 \item{target.annot.file}{Annotation file describing filenames and targets, and should be in \code{csv} format.}
 

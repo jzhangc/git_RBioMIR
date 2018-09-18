@@ -36,8 +36,11 @@ Update log
     0.2.0 (Feature preview)
       (ICEBOX)
         - New functions
-      
+
       (ADDED)
+        - New functions
+          - S3 print function for "mir_count"
+          
         - Updates to exisiting functions:
           - mirProcess() re-written, with:
             - simplied code base

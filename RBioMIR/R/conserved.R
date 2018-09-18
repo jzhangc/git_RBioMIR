@@ -3,7 +3,7 @@
 #' @description Data pre-processing for miRNA-seq read count files. Also eee \code{\link{mirProcessML}}.
 #' @param path Path to raw files. Default is the system working directory.
 #' @param raw.file.sep Raw read count file separators. Default is \code{""\"\"}, i.e. white space.
-#' @param species Species code, following the three letter naming convention.
+#' @param species Species code, following the traditional abbreviated naming convention, e.g. "hsa", "mmu".
 #' @param target.annot.file Annotation file describing filenames and targets, and should be in \code{csv} format.
 #' @param database MiRNA database, only for miRNA naming conventions. Currently the function only takes "mirbase".
 #' @param parallelComputing Wether to use parallel computing or not. Default is \code{TRUE}.
@@ -110,10 +110,25 @@ mirProcess <- function(path = getwd(), species = NULL, target.annot.file = NULL,
   out_dfm[is.na(out_dfm) == TRUE] <- 0
   out <- list(raw_read_count = out_dfm,
               target = tgt,
+              miRNA_database = database,
               selected_species = species,
               tot_species = tot_species)
   class(out) <- "mir_count"
   return(out)
+}
+
+
+#' @export
+print.mir_count <- function(x, ...){
+  cat("MiRNA raw reads processing summary:\n")
+  cat("\n")
+  cat(paste0(" MiRNA database: ", x$miRNA_database, "\n"))
+  cat(paste0(" Selected species: ", paste0(x$selected_species, collapse = " "), "\n"))
+  cat(paste0(" Total number of miRNA: ", dim(x$raw_read_count)[1], "\n"))
+  cat("\n")
+  cat(paste0(" Files read: ", "\n"))
+  cat(paste0(" ", x$target$file_name, collapse = "\n"))
+  cat("\n\n")
 }
 
 
