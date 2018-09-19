@@ -34,19 +34,18 @@ Installation:
 Update log
 
     0.2.0
-      (ADDED)
-        - New functions
-          - S3 print function for "mir_count"
+      - New functions
+        - S3 print function for "mir_count"
           
-        - Updates to exisiting functions:
-          - mirProcess() re-written, with:
-            - simplied code base
-            - foreach implementation of parallel computing
-            - compatibility for UNIX/UNIX-like/Windows systems
-            - non-mandatory naming convention for input .txt read count files
-            - ability to take annotation file
-            - output in S3 object "mir_count"
+      - Updates to exisiting functions:
+        - mirProcess() re-written, with:
+          - simplied code base
+          - foreach implementation of parallel computing
+          - compatibility for UNIX/UNIX-like/Windows systems
+          - non-mandatory naming convention for input .txt read count files
+          - ability to take annotation file
+          - output in S3 object "mir_count"
             
-         - A preview of UNIX Shell program mirna_processing added
-         - Other updates
-            - Information page updated
+       - A preview of UNIX Shell program mirna_processing added
+       - Other updates
+          - Information page updated
