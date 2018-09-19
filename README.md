@@ -32,6 +32,9 @@ Installation:
         
 
 Update log
+
+    0.2.2 (Feature preview)
+    
   
     0.2.1
       - Adjustments made to "mir_count" objects
