@@ -108,7 +108,11 @@ mirProcess <- function(path = getwd(), species = NULL, target.annot.file = NULL,
   ## output
   out_dfm <- Reduce(function(i, j)merge(i, j, all = TRUE), species_list)
   out_dfm[is.na(out_dfm) == TRUE] <- 0
-  out <- list(raw_read_count = out_dfm,
+  genes <- out_dfm[, 1]
+  counts <- out_dfm[, -1]
+  counts <- as.matrix(counts)
+  out <- list(raw_read_count = counts,
+              genes = genes,
               target = tgt,
               miRNA_database = database,
               selected_species = species,
@@ -122,9 +126,9 @@ mirProcess <- function(path = getwd(), species = NULL, target.annot.file = NULL,
 print.mir_count <- function(x, ...){
   cat("MiRNA raw reads processing summary:\n")
   cat("\n")
-  cat(paste0(" MiRNA database: ", x$miRNA_database, "\n"))
-  cat(paste0(" Selected species: ", paste0(x$selected_species, collapse = " "), "\n"))
-  cat(paste0(" Total number of miRNA: ", dim(x$raw_read_count)[1], "\n"))
+  cat(paste0(" MiRNA database: ", x[[3]], "\n"))
+  cat(paste0(" Selected species: ", paste0(x[[4]], collapse = " "), "\n"))
+  cat(paste0(" Total number of miRNA: ", length(x$genes), "\n"))
   cat("\n")
   cat(paste0(" Files read: ", "\n"))
   cat(paste0(" ", x$target$file_name, collapse = "\n"))

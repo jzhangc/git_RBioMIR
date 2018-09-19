@@ -33,11 +33,12 @@ Installation:
 
 Update log
   
-    0.2.1(Feature preview)
-    (ICEBOX)
-      - New functions
+    0.2.1
+      - Adjustments made to "mir_count" objects
+        - The object now outputs genes and counts separately
+        
+      - Bug fixes
 
-    (ADDED)
 
     0.2.0
       - New functions
