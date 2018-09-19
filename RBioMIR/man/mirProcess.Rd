@@ -24,7 +24,19 @@ mirProcess(path = getwd(), species = NULL, target.annot.file = NULL,
 \item{cluterType}{clusterType Only set when \code{parallelComputing = TRUE}, the type for parallel cluster. Options are \code{"PSOCK"} (all operating systems) and \code{"FORK"} (macOS and Unix-like system only). Default is \code{"PSOCK"}.}
 }
 \value{
-Outputs a \code{mirna_count} with merged read counts from mutliple files, with annotation.
+Outputs a \code{mir_count} with merged read counts from mutliple files, with annotation. The \code{mir_count} object contains the following:
+
+         \code{raw_read_count}
+
+         \code{genes}: The associated feature names. The use of "gene" here is in a generic sense.
+
+         \code{targets}: Sample annotation
+
+         \code{miRNA_database}
+
+         \code{selected_species}
+
+         \code{total_species}
 }
 \description{
 Data pre-processing for miRNA-seq read count files. Also eee \code{\link{mirProcessML}}.

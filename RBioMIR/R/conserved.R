@@ -10,7 +10,20 @@
 #' @param cluterType clusterType Only set when \code{parallelComputing = TRUE}, the type for parallel cluster. Options are \code{"PSOCK"} (all operating systems) and \code{"FORK"} (macOS and Unix-like system only). Default is \code{"PSOCK"}.
 #' @details When \code{species} left as \code{NULL}, the function will use all the species detected in the raw read count files.
 #'          The raw count files are usually in \code{.txt} format with "read count" and "mirna" columns. The read count files can be obtained using the shell program \code{mirna_processing}.
-#' @return Outputs a \code{mirna_count} with merged read counts from mutliple files, with annotation.
+#' @return Outputs a \code{mir_count} with merged read counts from mutliple files, with annotation. The \code{mir_count} object contains the following:
+#'
+#'          \code{raw_read_count}
+#'
+#'          \code{genes}: The associated feature names. The use of "gene" here is in a generic sense.
+#'
+#'          \code{targets}: Sample annotation
+#'
+#'          \code{miRNA_database}
+#'
+#'          \code{selected_species}
+#'
+#'          \code{total_species}
+#'
 #' @import foreach
 #' @import doParallel
 #' @importFrom parallel detectCores makeCluster stopCluster
@@ -113,10 +126,10 @@ mirProcess <- function(path = getwd(), species = NULL, target.annot.file = NULL,
   counts <- as.matrix(counts)
   out <- list(raw_read_count = counts,
               genes = genes,
-              target = tgt,
+              targets = tgt,
               miRNA_database = database,
               selected_species = species,
-              tot_species = tot_species)
+              total_species = tot_species)
   class(out) <- "mir_count"
   return(out)
 }
