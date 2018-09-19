@@ -33,10 +33,7 @@ Installation:
 
 Update log
 
-    0.2.0 (Feature preview)
-      (ICEBOX)
-        - New functions
-
+    0.2.0
       (ADDED)
         - New functions
           - S3 print function for "mir_count"
