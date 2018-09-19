@@ -143,7 +143,7 @@ mirProcess <- function(path = getwd(), species = NULL, target.annot.file = NULL,
 print.mir_count <- function(x, ...){
   cat("MiRNA raw reads processing summary:\n")
   cat("\n")
-  cat(paste0(" MiRNA database: ", x[[3]], "\n"))
+  cat(paste0(" MiRNA database: ", x$miRNA_database, "\n"))
   cat(paste0(" Selected species: ", paste0(x$selected_species, collapse = " "), "\n"))
   cat(paste0(" Total number of miRNA: ", length(x$genes), "\n"))
   cat("\n")
