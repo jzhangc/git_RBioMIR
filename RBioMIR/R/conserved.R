@@ -14,6 +14,8 @@
 #'
 #'          \code{raw_read_count}
 #'
+#'          \code{sample_library_sizes}
+#'
 #'          \code{genes}: The associated feature names. The use of "gene" here is in a generic sense.
 #'
 #'          \code{targets}: Sample annotation
@@ -124,7 +126,9 @@ mirProcess <- function(path = getwd(), species = NULL, target.annot.file = NULL,
   genes <- out_dfm[, 1]
   counts <- out_dfm[, -1]
   counts <- as.matrix(counts)
+  lib_size <- colSums(counts)
   out <- list(raw_read_count = counts,
+              sample_library_sizes = lib_size,
               genes = genes,
               targets = tgt,
               miRNA_database = database,

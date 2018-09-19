@@ -28,6 +28,8 @@ Outputs a \code{mir_count} with merged read counts from mutliple files, with ann
 
          \code{raw_read_count}
 
+         \code{sample_library_sizes}
+
          \code{genes}: The associated feature names. The use of "gene" here is in a generic sense.
 
          \code{targets}: Sample annotation
