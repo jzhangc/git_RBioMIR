@@ -5,8 +5,8 @@
 \title{mirProcess}
 \usage{
 mirProcess(path = getwd(), species = NULL, target.annot.file = NULL,
-  database = "mirbase", raw.file.sep = "", parallelComputing = FALSE,
-  clusterType = "FORK")
+  sample_groups.var.name = NULL, database = "mirbase",
+  raw.file.sep = "", parallelComputing = FALSE, clusterType = "FORK")
 }
 \arguments{
 \item{path}{Path to raw files. Default is the system working directory.}
@@ -14,6 +14,8 @@ mirProcess(path = getwd(), species = NULL, target.annot.file = NULL,
 \item{species}{Species code, following the traditional abbreviated naming convention, e.g. "hsa", "mmu".}
 
 \item{target.annot.file}{Annotation file describing filenames and targets, and should be in \code{csv} format.}
+
+\item{sample_groups.var.name}{Sample group annotation variable name in the \code{target.annot.file}.}
 
 \item{database}{MiRNA database, only for miRNA naming conventions. Currently the function only takes "mirbase".}
 
@@ -32,7 +34,9 @@ Outputs a \code{mir_count} with merged read counts from mutliple files, with ann
 
          \code{genes}: The associated feature names. The use of "gene" here is in a generic sense.
 
-         \code{targets}: Sample annotation
+         \code{targets}: Sample annotation matrix
+
+         \code{sample_gourps}: factor object for sample groups annotation
 
          \code{miRNA_database}
 

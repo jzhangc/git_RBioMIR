@@ -5,6 +5,7 @@
 #' @param raw.file.sep Raw read count file separators. Default is \code{""\"\"}, i.e. white space.
 #' @param species Species code, following the traditional abbreviated naming convention, e.g. "hsa", "mmu".
 #' @param target.annot.file Annotation file describing filenames and targets, and should be in \code{csv} format.
+#' @param sample_groups.var.name Sample group annotation variable name in the \code{target.annot.file}.
 #' @param database MiRNA database, only for miRNA naming conventions. Currently the function only takes "mirbase".
 #' @param parallelComputing Wether to use parallel computing or not. Default is \code{TRUE}.
 #' @param cluterType clusterType Only set when \code{parallelComputing = TRUE}, the type for parallel cluster. Options are \code{"PSOCK"} (all operating systems) and \code{"FORK"} (macOS and Unix-like system only). Default is \code{"PSOCK"}.
@@ -18,7 +19,9 @@
 #'
 #'          \code{genes}: The associated feature names. The use of "gene" here is in a generic sense.
 #'
-#'          \code{targets}: Sample annotation
+#'          \code{targets}: Sample annotation matrix
+#'
+#'          \code{sample_gourps}: factor object for sample groups annotation
 #'
 #'          \code{miRNA_database}
 #'
@@ -36,22 +39,29 @@
 #' readcountMerged <- mirProcess()
 #' }
 #' @export
-mirProcess <- function(path = getwd(), species = NULL, target.annot.file = NULL, database = "mirbase", raw.file.sep = "",
+mirProcess <- function(path = getwd(), species = NULL,
+                       target.annot.file = NULL, sample_groups.var.name = NULL,
+                       database = "mirbase", raw.file.sep = "",
                        parallelComputing = FALSE, clusterType = "FORK"){
   ## check argument
-  if (is.null(target.annot.file)){  # check and load target annotation
-    tgt <- NULL
+  if (is.null(target.annot.file)){  # check and load target (sample) annotation
+    stop("Please provide a target annotation file for target.annot.file arugment.")
   } else {
-    annot_name_length <- length(unlist(strsplit(target.annot.file, "\\.")))
-    annot_ext <- unlist(strsplit(target.annot.file, "\\."))[annot_name_length]
-    if (annot_ext != "csv") {
-      cat("target.annot.file is not in csv format. Proceed without using the file.\n")
-      tgt <- NULL
+    target.annot_name_length <- length(unlist(strsplit(target.annot.file, "\\.")))
+    target.annot_ext <- unlist(strsplit(target.annot.file, "\\."))[target.annot_name_length]
+    if (target.annot_ext != "csv") {
+      stop("target.annot.file is not in csv format.")
     } else {
       cat("Loading target annotation file...")
       tgt <- read.csv(file = target.annot.file, header = TRUE, stringsAsFactors = FALSE, check.names = FALSE)
       cat("Done!\n")
     }
+  }
+
+  if (!sample_groups.var.name %in% names(tgt)){
+    stop("Sample group annotation variable not found in the target annotation file.")
+  } else {
+    sample.groups <- factor(tgt[, sample_groups.var.name], levels = unique(tgt[, sample_groups.var.name]))
   }
 
   if (!database %in% c("mirbase")) stop("For now, the function only accepts database = \"mirbase\".")
@@ -137,6 +147,7 @@ mirProcess <- function(path = getwd(), species = NULL, target.annot.file = NULL,
               sample_library_sizes = lib_size,
               genes = genes,
               targets = tgt,
+              sample_groups = sample.groups,
               miRNA_database = database,
               selected_species = species,
               total_species = tot_species,
