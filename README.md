@@ -32,7 +32,12 @@ Installation:
         
 
 Update log
-
+    
+    0.2.2
+      - "files_processed" added to "mir_count" object
+      - A bug fixed for mirProcess function where the function will improperly check target.annot.file even if it's set at NULL
+    
+    
     0.2.1
       - Adjustments made to "mir_count" objects
         - The object now outputs genes and counts separately

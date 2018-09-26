@@ -26,6 +26,8 @@
 #'
 #'          \code{total_species}
 #'
+#'          \code{files_processed}
+#'
 #' @import foreach
 #' @import doParallel
 #' @importFrom parallel detectCores makeCluster stopCluster
@@ -37,20 +39,24 @@
 mirProcess <- function(path = getwd(), species = NULL, target.annot.file = NULL, database = "mirbase", raw.file.sep = "",
                        parallelComputing = FALSE, clusterType = "FORK"){
   ## check argument
-  annot_name_length <- length(unlist(strsplit(target.annot.file, "\\.")))
-  annot_ext <- unlist(strsplit(target.annot.file, "\\."))[annot_name_length]
+  if (is.null(target.annot.file)){  # check and load target annotation
+    tgt <- NULL
+  } else {
+    annot_name_length <- length(unlist(strsplit(target.annot.file, "\\.")))
+    annot_ext <- unlist(strsplit(target.annot.file, "\\."))[annot_name_length]
+    if (annot_ext != "csv") {
+      cat("target.annot.file is not in csv format. Proceed without using the file.\n")
+      tgt <- NULL
+    } else {
+      cat("Loading target annotation file...")
+      tgt <- read.csv(file = target.annot.file, header = TRUE, stringsAsFactors = FALSE, check.names = FALSE)
+      cat("Done!\n")
+    }
+  }
+
   if (!database %in% c("mirbase")) stop("For now, the function only accepts database = \"mirbase\".")
 
   ## load files
-  # check and load annotation
-  if (is.null(target.annot.file) | annot_ext != "csv"){
-    tgt <- NULL
-  } else {
-    cat("Loading target annotation file...")
-    tgt <- read.csv(file = target.annot.file, header = TRUE, stringsAsFactors = FALSE, check.names = FALSE)
-    cat("Done!\n")
-  }
-
   # set read files
   filename <- list.files(path = path, pattern = ".txt")
   filename_wo_ext <- sub("[.][^.]*$", "", filename)  # general expression to remove extension, i.e. a.b.c becomes a.b
@@ -133,7 +139,8 @@ mirProcess <- function(path = getwd(), species = NULL, target.annot.file = NULL,
               targets = tgt,
               miRNA_database = database,
               selected_species = species,
-              total_species = tot_species)
+              total_species = tot_species,
+              files_processed = filename)
   class(out) <- "mir_count"
   return(out)
 }
@@ -148,7 +155,7 @@ print.mir_count <- function(x, ...){
   cat(paste0(" Total number of miRNA: ", length(x$genes), "\n"))
   cat("\n")
   cat(paste0(" Files read: ", "\n"))
-  cat(paste0(" ", x$target$file_name, collapse = "\n"))
+  cat(paste0(" ", x$files_processed, collapse = "\n"))
   cat("\n\n")
 }
 

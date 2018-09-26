@@ -39,6 +39,8 @@ Outputs a \code{mir_count} with merged read counts from mutliple files, with ann
          \code{selected_species}
 
          \code{total_species}
+
+         \code{files_processed}
 }
 \description{
 Data pre-processing for miRNA-seq read count files. Also eee \code{\link{mirProcessML}}.
