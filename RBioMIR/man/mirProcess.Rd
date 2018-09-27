@@ -52,6 +52,8 @@ Data pre-processing for miRNA-seq read count files. Also eee \code{\link{mirProc
 \details{
 When \code{species} left as \code{NULL}, the function will use all the species detected in the raw read count files.
          The raw count files are usually in \code{.txt} format with "read count" and "mirna" columns. The read count files can be obtained using the shell program \code{mirna_processing}.
+
+         For \code{target.annot.file}, the argument doesn't accept full file path. The function will only seek the file under working directory. So, the file should be placed under working directory.
 }
 \examples{
 \dontrun{
