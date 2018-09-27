@@ -11,6 +11,9 @@
 #' @param cluterType clusterType Only set when \code{parallelComputing = TRUE}, the type for parallel cluster. Options are \code{"PSOCK"} (all operating systems) and \code{"FORK"} (macOS and Unix-like system only). Default is \code{"PSOCK"}.
 #' @details When \code{species} left as \code{NULL}, the function will use all the species detected in the raw read count files.
 #'          The raw count files are usually in \code{.txt} format with "read count" and "mirna" columns. The read count files can be obtained using the shell program \code{mirna_processing}.
+#'
+#'          For \code{target.annot.file}, the argument doesn't accept full file path. The function will only seek the file under working directory. So, the file should be placed under working directory.
+#'
 #' @return Outputs a \code{mir_count} with merged read counts from mutliple files, with annotation. The \code{mir_count} object contains the following:
 #'
 #'          \code{raw_read_count}
