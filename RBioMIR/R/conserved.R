@@ -58,6 +58,7 @@ mirProcess <- function(path = getwd(), species = NULL,
     }
   }
 
+  if (is.null(sample_groups.var.name)) stop("Please provide sample_groups.var.name.")
   if (!sample_groups.var.name %in% names(tgt)){
     stop("Sample group annotation variable not found in the target annotation file.")
   } else {
