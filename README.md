@@ -18,17 +18,18 @@ Installation:
     
   - Install bioconductor
   
-        source("https://bioconductor.org/biocLite.R")
-      
-        biocLite()
+        if (!requireNamespace("BiocManager"))
+            install.packages("BiocManager")
+            
+        BiocManager::install()
     
   - Install stable release
   
-        devtools::install_github("jzhangc/git_RBioMIR/RBioMIR", repos = BiocInstaller::biocinstallRepos())    
+        devtools::install_github("jzhangc/git_RBioMIR/RBioMIR", repos = BiocManager::repositories())    
 
   - Install development build
   
-        devtools::install_github("jzhangc/git_RBioMIR/RBioMIR", repos = BiocInstaller::biocinstallRepos(), ref = "beta")  
+        devtools::install_github("jzhangc/git_RBioMIR/RBioMIR", repos = BiocManager::repositories(), ref = "beta")  
         
 
 Update log
