@@ -34,7 +34,7 @@ Installation:
 
 Update log
 
-    0.2.3
+    0.2.3 (Jan.17.2019)
       - New bioconductor installation instructions added
       
       
