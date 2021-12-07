@@ -303,7 +303,7 @@ mirDeepProcess <- function(raw_read_file = NULL, raw.file.sep = "/t",
       if (verbose) cat(paste0("Merging gene reps using ", rep_merge_method, " method..."))
       ID <- as.character(rownames(counts))
       if (mode(counts) == "character") {  # if the count data is characters, should not be the case
-        warning()
+        warning("The count file contains characters. Please check.\n")
         d <- duplicated(ID)
         if (any(d)) {
           counts <- counts[!d, , drop = FALSE]
