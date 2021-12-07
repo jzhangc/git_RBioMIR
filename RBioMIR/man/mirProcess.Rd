@@ -42,9 +42,9 @@ Outputs a \code{mir_count} with merged read counts from multiple files, with ann
 
          \code{sample_library_sizes}
 
-         \code{genes_complete_annotation}: Data frame that contains all the annotation inforamtion for the miRNAs.
+         \code{genes_complete_annotation}: Data frame that contains all the annotation information for the miRNAs.
 
-         \code{genes}: String vector. The associated feature names. The use of "gene" here is in a generic sense.
+         \code{genes}: The associated miRNA names. The use of "gene" here is in a generic sense.
 
          \code{targets}: Sample annotation matrix
 

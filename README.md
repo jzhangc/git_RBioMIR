@@ -38,6 +38,7 @@ Update log
       - mirDeepProcess() function added to process conserved miRNA count resutls from miRDeep2
       - The "mir_count" object updated with "genes_complete_annotation" data frame
         - The print function for "mir_count" updated accordingly
+      - The "mir_count" object's "raw_read_count" now uses gene names as row names
 
     0.2.3 (Jan.17.2019)
       - New bioconductor installation instructions added

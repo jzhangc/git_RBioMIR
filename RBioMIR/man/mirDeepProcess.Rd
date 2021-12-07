@@ -5,12 +5,13 @@
 \title{mirDeepProcess}
 \usage{
 mirDeepProcess(
-  raw_read_file,
+  raw_read_file = NULL,
   raw.file.sep = "/t",
   rm_norm_cols = TRUE,
   working.gene.annot.var.name = "miRNA",
   target.annot.file = NULL,
   sample_groups.var.name = NULL,
+  rep_merge_method = c("none", "sum", "mean"),
   species = NULL,
   database = "mirbase",
   parallelComputing = FALSE,
@@ -31,6 +32,8 @@ mirDeepProcess(
 
 \item{sample_groups.var.name}{Sample group annotation variable name in the \code{target.annot.file}.}
 
+\item{rep_merge_method}{String. MiRNA replicate merging method. Default is \code{"none"}.}
+
 \item{species}{Species code, following the traditional abbreviated naming convention, e.g. "hsa", "mmu".}
 
 \item{database}{MiRNA database, only for miRNA naming conventions. Currently the function only takes "mirbase".}
@@ -48,9 +51,9 @@ Outputs a \code{mir_count},  with annotation. The \code{mir_count} object contai
 
          \code{sample_library_sizes}
 
-         \code{genes_complete_annotation}: Data frame that contains all the annotation inforamtion for the miRNAs.
+         \code{genes_complete_annotation}: Data frame that contains all the annotation information for the miRNAs.
 
-         \code{genes}: The associated feature names. The use of "gene" here is in a generic sense.
+         \code{genes}: The associated miRNA names. The use of "gene" here is in a generic sense. might have been merged.
 
          \code{targets}: Sample annotation matrix
 
@@ -68,11 +71,17 @@ Outputs a \code{mir_count},  with annotation. The \code{mir_count} object contai
 Data pre-processing for miRNA-seq read count files specifically designed for count results from the miRDeep2 conserved miRNA module.
 }
 \details{
-When \code{species} left as \code{NULL}, the function will use all the species detected in the raw read count files.
-         The raw count files are usually in \code{.csv} from miRDeep2. This file usually contains a \code{"#"} symbol in the first line, which is automatically removed by the current function.
-         The first four columnes of the files are \code{miRNA}, \code{read_count}, \code{precursor} and \code{total}, forming the basis of \code{genes_complete_annotation} and \code{genes} in the output.
+1. When \code{species} left as \code{NULL}, the function will use all the species detected in the raw read count files.
+            The raw count files are usually in \code{.csv} from miRDeep2. This file usually contains a \code{"#"} symbol in the first line, which is automatically removed by the current function.
+            The first four columnes of the files are \code{miRNA}, \code{read_count}, \code{precursor} and \code{total}, forming the basis of \code{genes_complete_annotation} and \code{genes} in the output.
 
-         For \code{target.annot.file}, the argument doesn't accept full file path. The function will only seek the file under working directory. So, the file should be placed under working directory.
+         2. For \code{target.annot.file}, the argument doesn't accept full file path. The function will only seek the file under working directory. So, the file should be placed under working directory.
+
+         3. When miRNA replicates are merged, i.e. \code{rep_merge_method} set to either \code{"sum"} or \code{"mean"},
+            the \code{genes} item contains the merged results, whereas the \coce{genes_complete_annoation} contains the original first four columns
+            from the miRDeep2 output, not merged.
+
+            The replicates may happen when different precursors lead to the same mature miRNA.
 }
 \examples{
 \dontrun{

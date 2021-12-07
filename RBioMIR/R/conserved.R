@@ -21,9 +21,9 @@
 #'
 #'          \code{sample_library_sizes}
 #'
-#'          \code{genes_complete_annotation}: Data frame that contains all the annotation inforamtion for the miRNAs.
+#'          \code{genes_complete_annotation}: Data frame that contains all the annotation information for the miRNAs.
 #'
-#'          \code{genes}: String vector. The associated feature names. The use of "gene" here is in a generic sense.
+#'          \code{genes}: The associated miRNA names. The use of "gene" here is in a generic sense.
 #'
 #'          \code{targets}: Sample annotation matrix
 #'
@@ -151,6 +151,7 @@ mirProcess <- function(path = getwd(), species = NULL,
   genes <- genes_dfm[, 1]
   counts <- out_dfm[, -1]
   counts <- as.matrix(counts)
+  rownames(counts) <- genes
   lib_size <- colSums(counts)
   out <- list(raw_read_count = counts,
               sample_library_sizes = lib_size,
@@ -174,6 +175,7 @@ mirProcess <- function(path = getwd(), species = NULL,
 #' @param raw.file.sep Raw read count file separators. Default is \code{"\t"}, i.e. tab.
 #' @param rm_norm_cols Bool. If to remove the \code{"(norm)"} columns from the read file. Default is \code{TRUE}.
 #' @param working.gene.annot.var.name String. The column name for the miRNA identifiers. Default is \code{"miRNA"}. Could be precursor (\code{"precursor"}) as well.
+#' @param rep_merge_method String. MiRNA replicate merging method. Default is \code{"none"}.
 #' @param species Species code, following the traditional abbreviated naming convention, e.g. "hsa", "mmu".
 #' @param target.annot.file Annotation file describing filenames and targets, and should be in \code{csv} format.
 #' @param sample_groups.var.name Sample group annotation variable name in the \code{target.annot.file}.
@@ -181,11 +183,17 @@ mirProcess <- function(path = getwd(), species = NULL,
 #' @param parallelComputing Whether to use parallel computing or not. Default is \code{TRUE}.
 #' @param cluterType clusterType Only set when \code{parallelComputing = TRUE}, the type for parallel cluster. Options are \code{"PSOCK"} (all operating systems) and \code{"FORK"} (macOS and Unix-like system only). Default is \code{"PSOCK"}.
 #' @param verbose Bool. If to display function messages, excluding warnings and errors.
-#' @details When \code{species} left as \code{NULL}, the function will use all the species detected in the raw read count files.
-#'          The raw count files are usually in \code{.csv} from miRDeep2. This file usually contains a \code{"#"} symbol in the first line, which is automatically removed by the current function.
-#'          The first four columnes of the files are \code{miRNA}, \code{read_count}, \code{precursor} and \code{total}, forming the basis of \code{genes_complete_annotation} and \code{genes} in the output.
+#' @details 1. When \code{species} left as \code{NULL}, the function will use all the species detected in the raw read count files.
+#'             The raw count files are usually in \code{.csv} from miRDeep2. This file usually contains a \code{"#"} symbol in the first line, which is automatically removed by the current function.
+#'             The first four columnes of the files are \code{miRNA}, \code{read_count}, \code{precursor} and \code{total}, forming the basis of \code{genes_complete_annotation} and \code{genes} in the output.
 #'
-#'          For \code{target.annot.file}, the argument doesn't accept full file path. The function will only seek the file under working directory. So, the file should be placed under working directory.
+#'          2. For \code{target.annot.file}, the argument doesn't accept full file path. The function will only seek the file under working directory. So, the file should be placed under working directory.
+#'
+#'          3. When miRNA replicates are merged, i.e. \code{rep_merge_method} set to either \code{"sum"} or \code{"mean"},
+#'             the \code{genes} item contains the merged results, whereas the \coce{genes_complete_annoation} contains the original first four columns
+#'             from the miRDeep2 output, not merged.
+#'
+#'             The replicates may happen when different precursors lead to the same mature miRNA.
 #'
 #' @return Outputs a \code{mir_count},  with annotation. The \code{mir_count} object contains the following:
 #'
@@ -193,9 +201,9 @@ mirProcess <- function(path = getwd(), species = NULL,
 #'
 #'          \code{sample_library_sizes}
 #'
-#'          \code{genes_complete_annotation}: Data frame that contains all the annotation inforamtion for the miRNAs.
+#'          \code{genes_complete_annotation}: Data frame that contains all the annotation information for the miRNAs.
 #'
-#'          \code{genes}: The associated feature names. The use of "gene" here is in a generic sense.
+#'          \code{genes}: The associated miRNA names. The use of "gene" here is in a generic sense. might have been merged.
 #'
 #'          \code{targets}: Sample annotation matrix
 #'
@@ -223,13 +231,16 @@ mirProcess <- function(path = getwd(), species = NULL,
 #'                                   verbose = TRUE)
 #' }
 #' @export
-mirDeepProcess <- function(raw_read_file, raw.file.sep = "/t",
+mirDeepProcess <- function(raw_read_file = NULL, raw.file.sep = "/t",
                            rm_norm_cols = TRUE, working.gene.annot.var.name = "miRNA",
                            target.annot.file = NULL, sample_groups.var.name = NULL,
+                           rep_merge_method = c("none", "sum", "mean"),
                            species = NULL, database = "mirbase",
                            parallelComputing = FALSE, clusterType = "FORK",
                            verbose = TRUE){
   ## check argument
+  if (is.null) stop("Please provide the raw_read_file")
+
   if (is.null(target.annot.file)){  # check and load target (sample) annotation
     stop("Please provide a target annotation file for target.annot.file arugment.")
   } else {
@@ -252,6 +263,7 @@ mirDeepProcess <- function(raw_read_file, raw.file.sep = "/t",
   }
 
   if (!database %in% c("mirbase")) stop("For now, the function only accepts database = \"mirbase\".")
+  rep_merge_method <- match.arg(rep_merge_method, choices = c("none", "sum", "mean"))
 
   ## construct data
   raw <- read.delim(raw_read_file, check.names = FALSE)
@@ -269,17 +281,46 @@ mirDeepProcess <- function(raw_read_file, raw.file.sep = "/t",
   }
 
   ## construct other data
-  # counts and lib size
-  counts <- raw[, -c(1:4)]
-  counts <- as.matrix(counts)
-  lib_size <- colSums(counts)
-
   # genes
   genes_dfm <- raw[, 1:4]
   if (!working.gene.annot.var.name %in% names(genes_dfm)){
     stop("Working gene annotation variable not found in the complete gene annotation columns.")
   } else {
     genes <- genes_dfm[, working.gene.annot.var.name]
+  }
+
+  # counts and lib size
+  counts <- raw[, -c(1:4)]
+  counts <- as.matrix(counts)
+  rownames(counts) <- genes
+  lib_size <- colSums(counts)
+
+  # rep merge
+  if (length(genes) != length(unique(genes))) {
+    if (rep_merge_method == "none") {
+      warning("Genes contain replicates. Maybe merge them first by setting \"rep_merge_method\" to either \"sum\" or \"mean\".")
+    } else {
+      if (verbose) cat(paste0("Merging gene reps using ", rep_merge_method, " method..."))
+      ID <- as.character(rownames(counts))
+      if (mode(counts) == "character") {  # if the count data is characters, should not be the case
+        warning()
+        d <- duplicated(ID)
+        if (any(d)) {
+          counts <- counts[!d, , drop = FALSE]
+        } # else do not anything
+      } else {
+        ID <- factor(ID, levels = unique(ID))
+        y <- rowsum(counts, ID, reorder = FALSE, na.rm = TRUE)  # sum
+        if (rep_merge_method == "sum"){
+          counts <- y
+        } else if (rep_merge_method == "mean") {
+          n <- rowsum(1L - is.na(counts), ID, reorder = FALSE)
+          counts <- y/n
+        }
+      }
+      genes <- rownames(counts)
+      if (verbose) cat("Done!\n")
+    }
   }
 
   # species
