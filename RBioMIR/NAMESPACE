@@ -2,6 +2,7 @@
 
 S3method(print,mir_count)
 export(hairpinSet)
+export(mirDeepProcess)
 export(mirFit)
 export(mirNrm)
 export(mirPlot)

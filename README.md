@@ -34,6 +34,11 @@ Installation:
 
 Update log
 
+    0.2.4 (Dec.7.2021)
+      - mirDeepProcess() function added to process conserved miRNA count resutls from miRDeep2
+      - The "mir_count" object updated with "genes_complete_annotation" data frame
+        - The print function for "mir_count" updated accordingly
+
     0.2.3 (Jan.17.2019)
       - New bioconductor installation instructions added
       

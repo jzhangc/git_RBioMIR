@@ -4,8 +4,7 @@
 \alias{mirPlot}
 \title{mirPlot}
 \usage{
-mirPlot(dfm, xTxtSize = 10, yTxtSize = 10, plotWidth = 170,
-  plotHeight = 150)
+mirPlot(dfm, xTxtSize = 10, yTxtSize = 10, plotWidth = 170, plotHeight = 150)
 }
 \arguments{
 \item{dfm}{Input dataframe.}

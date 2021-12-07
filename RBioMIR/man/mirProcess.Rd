@@ -4,9 +4,17 @@
 \alias{mirProcess}
 \title{mirProcess}
 \usage{
-mirProcess(path = getwd(), species = NULL, target.annot.file = NULL,
-  sample_groups.var.name = NULL, database = "mirbase",
-  raw.file.sep = "", parallelComputing = FALSE, clusterType = "FORK")
+mirProcess(
+  path = getwd(),
+  species = NULL,
+  target.annot.file = NULL,
+  sample_groups.var.name = NULL,
+  database = "mirbase",
+  raw.file.sep = "",
+  parallelComputing = FALSE,
+  clusterType = "FORK",
+  verbose = TRUE
+)
 }
 \arguments{
 \item{path}{Path to raw files. Default is the system working directory.}
@@ -21,18 +29,22 @@ mirProcess(path = getwd(), species = NULL, target.annot.file = NULL,
 
 \item{raw.file.sep}{Raw read count file separators. Default is \code{""\"\"}, i.e. white space.}
 
-\item{parallelComputing}{Wether to use parallel computing or not. Default is \code{TRUE}.}
+\item{parallelComputing}{Whether to use parallel computing or not. Default is \code{TRUE}.}
+
+\item{verbose}{Bool. If to display function messages, excluding warnings and errors.}
 
 \item{cluterType}{clusterType Only set when \code{parallelComputing = TRUE}, the type for parallel cluster. Options are \code{"PSOCK"} (all operating systems) and \code{"FORK"} (macOS and Unix-like system only). Default is \code{"PSOCK"}.}
 }
 \value{
-Outputs a \code{mir_count} with merged read counts from mutliple files, with annotation. The \code{mir_count} object contains the following:
+Outputs a \code{mir_count} with merged read counts from multiple files, with annotation. The \code{mir_count} object contains the following:
 
          \code{raw_read_count}
 
          \code{sample_library_sizes}
 
-         \code{genes}: The associated feature names. The use of "gene" here is in a generic sense.
+         \code{genes_complete_annotation}: Data frame that contains all the annotation inforamtion for the miRNAs.
+
+         \code{genes}: String vector. The associated feature names. The use of "gene" here is in a generic sense.
 
          \code{targets}: Sample annotation matrix
 
@@ -47,7 +59,7 @@ Outputs a \code{mir_count} with merged read counts from mutliple files, with ann
          \code{files_processed}
 }
 \description{
-Data pre-processing for miRNA-seq read count files. Also eee \code{\link{mirProcessML}}.
+Data pre-processing for miRNA-seq read count files. Also see \code{\link{mirProcessML}}.
 }
 \details{
 When \code{species} left as \code{NULL}, the function will use all the species detected in the raw read count files.

@@ -1,26 +1,29 @@
 #' @title mirProcess
 #'
-#' @description Data pre-processing for miRNA-seq read count files. Also eee \code{\link{mirProcessML}}.
+#' @description Data pre-processing for miRNA-seq read count files. Also see \code{\link{mirProcessML}}.
 #' @param path Path to raw files. Default is the system working directory.
 #' @param raw.file.sep Raw read count file separators. Default is \code{""\"\"}, i.e. white space.
 #' @param species Species code, following the traditional abbreviated naming convention, e.g. "hsa", "mmu".
 #' @param target.annot.file Annotation file describing filenames and targets, and should be in \code{csv} format.
 #' @param sample_groups.var.name Sample group annotation variable name in the \code{target.annot.file}.
 #' @param database MiRNA database, only for miRNA naming conventions. Currently the function only takes "mirbase".
-#' @param parallelComputing Wether to use parallel computing or not. Default is \code{TRUE}.
+#' @param parallelComputing Whether to use parallel computing or not. Default is \code{TRUE}.
 #' @param cluterType clusterType Only set when \code{parallelComputing = TRUE}, the type for parallel cluster. Options are \code{"PSOCK"} (all operating systems) and \code{"FORK"} (macOS and Unix-like system only). Default is \code{"PSOCK"}.
+#' @param verbose Bool. If to display function messages, excluding warnings and errors.
 #' @details When \code{species} left as \code{NULL}, the function will use all the species detected in the raw read count files.
 #'          The raw count files are usually in \code{.txt} format with "read count" and "mirna" columns. The read count files can be obtained using the shell program \code{mirna_processing}.
 #'
 #'          For \code{target.annot.file}, the argument doesn't accept full file path. The function will only seek the file under working directory. So, the file should be placed under working directory.
 #'
-#' @return Outputs a \code{mir_count} with merged read counts from mutliple files, with annotation. The \code{mir_count} object contains the following:
+#' @return Outputs a \code{mir_count} with merged read counts from multiple files, with annotation. The \code{mir_count} object contains the following:
 #'
 #'          \code{raw_read_count}
 #'
 #'          \code{sample_library_sizes}
 #'
-#'          \code{genes}: The associated feature names. The use of "gene" here is in a generic sense.
+#'          \code{genes_complete_annotation}: Data frame that contains all the annotation inforamtion for the miRNAs.
+#'
+#'          \code{genes}: String vector. The associated feature names. The use of "gene" here is in a generic sense.
 #'
 #'          \code{targets}: Sample annotation matrix
 #'
@@ -45,7 +48,8 @@
 mirProcess <- function(path = getwd(), species = NULL,
                        target.annot.file = NULL, sample_groups.var.name = NULL,
                        database = "mirbase", raw.file.sep = "",
-                       parallelComputing = FALSE, clusterType = "FORK"){
+                       parallelComputing = FALSE, clusterType = "FORK",
+                       verbose = TRUE){
   ## check argument
   if (is.null(target.annot.file)){  # check and load target (sample) annotation
     stop("Please provide a target annotation file for target.annot.file arugment.")
@@ -55,9 +59,9 @@ mirProcess <- function(path = getwd(), species = NULL,
     if (target.annot_ext != "csv") {
       stop("target.annot.file is not in csv format.")
     } else {
-      cat("Loading target annotation file...")
+      if (verbose) cat("Loading target annotation file...")
       tgt <- read.csv(file = target.annot.file, header = TRUE, stringsAsFactors = FALSE, check.names = FALSE)
-      cat("Done!\n")
+      if (verbose) cat("Done!\n")
     }
   }
 
@@ -76,7 +80,7 @@ mirProcess <- function(path = getwd(), species = NULL,
   filename_wo_ext <- sub("[.][^.]*$", "", filename)  # general expression to remove extension, i.e. a.b.c becomes a.b
 
   # load reads
-  cat("Processing read count files...")
+  if (verbose) cat("Processing read count files...")
   raw_list <- vector(mode = "list", length = length(filename))
   if (!parallelComputing){ # single core
     raw_list[] <- foreach(i = filename) %do% {
@@ -113,13 +117,13 @@ mirProcess <- function(path = getwd(), species = NULL,
     }
   }
   names(raw_list) <- filename_wo_ext
-  cat("Done!\n")
+  if (verbose) cat("Done!\n")
 
   # file loaded message
-  cat("\n")
-  cat("Files loaded: \n")
+  if (verbose) cat("\n")
+  if (verbose) cat("Files loaded: \n")
   for (i in filename){
-    cat(paste0("\t", i, "\n"))
+    if (verbose) cat(paste0("\t", i, "\n"))
   }
 
   # get and check species
@@ -143,12 +147,14 @@ mirProcess <- function(path = getwd(), species = NULL,
   ## output
   out_dfm <- Reduce(function(i, j)merge(i, j, all = TRUE), species_list)
   out_dfm[is.na(out_dfm) == TRUE] <- 0
-  genes <- out_dfm[, 1]
+  genes_dfm <- out_dfm[, 1, drop = FALSE]
+  genes <- genes_dfm[, 1]
   counts <- out_dfm[, -1]
   counts <- as.matrix(counts)
   lib_size <- colSums(counts)
   out <- list(raw_read_count = counts,
               sample_library_sizes = lib_size,
+              genes_complete_annotation = genes_dfm,
               genes = genes,
               targets = tgt,
               sample_groups = sample.groups,
@@ -161,13 +167,171 @@ mirProcess <- function(path = getwd(), species = NULL,
 }
 
 
+#' @title mirDeepProcess
+#'
+#' @description Data pre-processing for miRNA-seq read count files specifically designed for count results from the miRDeep2 conserved miRNA module.
+#' @param raw_read_file Read count csv file from miRDeep2.
+#' @param raw.file.sep Raw read count file separators. Default is \code{"\t"}, i.e. tab.
+#' @param rm_norm_cols Bool. If to remove the \code{"(norm)"} columns from the read file. Default is \code{TRUE}.
+#' @param working.gene.annot.var.name String. The column name for the miRNA identifiers. Default is \code{"miRNA"}. Could be precursor (\code{"precursor"}) as well.
+#' @param species Species code, following the traditional abbreviated naming convention, e.g. "hsa", "mmu".
+#' @param target.annot.file Annotation file describing filenames and targets, and should be in \code{csv} format.
+#' @param sample_groups.var.name Sample group annotation variable name in the \code{target.annot.file}.
+#' @param database MiRNA database, only for miRNA naming conventions. Currently the function only takes "mirbase".
+#' @param parallelComputing Whether to use parallel computing or not. Default is \code{TRUE}.
+#' @param cluterType clusterType Only set when \code{parallelComputing = TRUE}, the type for parallel cluster. Options are \code{"PSOCK"} (all operating systems) and \code{"FORK"} (macOS and Unix-like system only). Default is \code{"PSOCK"}.
+#' @param verbose Bool. If to display function messages, excluding warnings and errors.
+#' @details When \code{species} left as \code{NULL}, the function will use all the species detected in the raw read count files.
+#'          The raw count files are usually in \code{.csv} from miRDeep2. This file usually contains a \code{"#"} symbol in the first line, which is automatically removed by the current function.
+#'          The first four columnes of the files are \code{miRNA}, \code{read_count}, \code{precursor} and \code{total}, forming the basis of \code{genes_complete_annotation} and \code{genes} in the output.
+#'
+#'          For \code{target.annot.file}, the argument doesn't accept full file path. The function will only seek the file under working directory. So, the file should be placed under working directory.
+#'
+#' @return Outputs a \code{mir_count},  with annotation. The \code{mir_count} object contains the following:
+#'
+#'          \code{raw_read_count}
+#'
+#'          \code{sample_library_sizes}
+#'
+#'          \code{genes_complete_annotation}: Data frame that contains all the annotation inforamtion for the miRNAs.
+#'
+#'          \code{genes}: The associated feature names. The use of "gene" here is in a generic sense.
+#'
+#'          \code{targets}: Sample annotation matrix
+#'
+#'          \code{sample_gourps}: factor object for sample groups annotation
+#'
+#'          \code{miRNA_database}
+#'
+#'          \code{selected_species}
+#'
+#'          \code{total_species}
+#'
+#'          \code{files_processed}
+#'
+#' @import foreach
+#' @import doParallel
+#' @importFrom parallel detectCores makeCluster stopCluster
+#' @examples
+#' \dontrun{
+#' readcountMerged <- mirDeepProcess(raw_read_file = "miRNAs_expressed_all_samples.csv", rm_norm_cols = TRUE,
+#'                                   raw.file.sep = "/t",
+#'                                   target.annot.file = "samples_annotation.csv",
+#'                                   sample_groups.var.name = 'groupid',
+#'                                   species = "mmu", database = "mirbase",
+#'                                   parallelComputing = TRUE, clusterType = "FORK",
+#'                                   verbose = TRUE)
+#' }
+#' @export
+mirDeepProcess <- function(raw_read_file, raw.file.sep = "/t",
+                           rm_norm_cols = TRUE, working.gene.annot.var.name = "miRNA",
+                           target.annot.file = NULL, sample_groups.var.name = NULL,
+                           species = NULL, database = "mirbase",
+                           parallelComputing = FALSE, clusterType = "FORK",
+                           verbose = TRUE){
+  ## check argument
+  if (is.null(target.annot.file)){  # check and load target (sample) annotation
+    stop("Please provide a target annotation file for target.annot.file arugment.")
+  } else {
+    target.annot_name_length <- length(unlist(strsplit(target.annot.file, "\\.")))
+    target.annot_ext <- unlist(strsplit(target.annot.file, "\\."))[target.annot_name_length]
+    if (target.annot_ext != "csv") {
+      stop("target.annot.file is not in csv format.")
+    } else {
+      if (verbose) cat("Loading target annotation file...")
+      tgt <- read.csv(file = target.annot.file, header = TRUE, stringsAsFactors = FALSE, check.names = FALSE)
+      if (verbose) cat("Done!\n")
+    }
+  }
+
+  if (is.null(sample_groups.var.name)) stop("Please provide sample_groups.var.name.")
+  if (!sample_groups.var.name %in% names(tgt)){
+    stop("Sample group annotation variable not found in the target annotation file.")
+  } else {
+    sample.groups <- factor(tgt[, sample_groups.var.name], levels = unique(tgt[, sample_groups.var.name]))
+  }
+
+  if (!database %in% c("mirbase")) stop("For now, the function only accepts database = \"mirbase\".")
+
+  ## construct data
+  raw <- read.delim(raw_read_file, check.names = FALSE)
+  if (length(grep("#", colnames(raw))) > 0) {
+    colnames(raw) <- gsub("#", "", colnames(raw))
+  }
+
+  if (rm_norm_cols) {
+    norm_idx <- grep("(norm)", colnames(raw))
+    if (length(norm_idx) < 1) {
+      warning("No norm columns are found. Argument \"rm_norm_cols\" ignored.\n")
+    } else {
+      raw[, norm_idx] <- NULL
+    }
+  }
+
+  ## construct other data
+  # counts and lib size
+  counts <- raw[, -c(1:4)]
+  lib_size <- colSums(counts)
+
+  # genes
+  genes_dfm <- raw[, 1:4]
+  if (!working.gene.annot.var.name %in% names(genes_dfm)){
+    stop("Working gene annotation variable not found in the complete gene annotation columns.")
+  } else {
+    genes <- genes_dfm[, working.gene.annot.var.name]
+  }
+
+  # species
+  if (verbose) cat(paste0("Extracting species information from ", database, "..."))
+  if (parallelComputing) {
+    # set clusters
+    n_cores <- detectCores() - 1
+    cl <- makeCluster(n_cores, clusterType = clusterType)
+    registerDoParallel(cl)
+    on.exit(stopCluster(cl)) # close connect when exiting the function
+
+    tot_species <- unique(foreach(i = 1:length(strsplit(genes, split = '-')), .combine = 'c') %dopar% {
+      strsplit(genes, split = '-')[[i]][1]
+    })
+  } else{
+    tot_species <- unique(foreach(i = 1:length(strsplit(genes, split = '-')), .combine = 'c') %do% {
+      strsplit(genes, split = '-')[[i]][1]
+    })
+  }
+  if (verbose) cat("Done!\n")
+
+  if (is.null(species) | !all(species %in% tot_species)){
+    warning("Set species not all found in data, or species not set. Proceed with all species (may be very slow).")
+    species <- tot_species
+  }
+
+  # file name
+  filename <- unlist(strsplit(raw_read_file, "/"))[length(unlist(strsplit(raw_read_file, "/")))]
+
+  ## output
+  out <- list(raw_read_count = counts,
+              sample_library_sizes = lib_size,
+              genes_complete_annotation = genes_dfm,
+              genes = genes,
+              targets = tgt,
+              sample_groups = sample.groups,
+              miRNA_database = database,
+              selected_species = species,
+              total_species = tot_species,
+              files_processed = filename)
+
+  class(out) <- "mir_count"
+  return(out)
+}
+
+
 #' @export
 print.mir_count <- function(x, ...){
   cat("MiRNA raw reads processing summary:\n")
   cat("\n")
   cat(paste0(" MiRNA database: ", x$miRNA_database, "\n"))
   cat(paste0(" Selected species: ", paste0(x$selected_species, collapse = " "), "\n"))
-  cat(paste0(" Total number of miRNA: ", length(x$genes), "\n"))
+  cat(paste0(" Total number of miRNAs: ", length(x$genes), "\n"))
   cat("\n")
   cat(paste0(" Files read: ", "\n"))
   cat(paste0(" ", x$files_processed, collapse = "\n"))
