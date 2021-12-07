@@ -271,6 +271,7 @@ mirDeepProcess <- function(raw_read_file, raw.file.sep = "/t",
   ## construct other data
   # counts and lib size
   counts <- raw[, -c(1:4)]
+  counts <- as.matrix(counts)
   lib_size <- colSums(counts)
 
   # genes
