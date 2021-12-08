@@ -15,7 +15,7 @@
 #'
 #'          For \code{target.annot.file}, the argument doesn't accept full file path. The function will only seek the file under working directory. So, the file should be placed under working directory.
 #'
-#' @return Outputs a \code{mir_count} with merged read counts from multiple files, with annotation. The \code{mir_count} object contains the following:
+#' @return Outputs a \code{mir_count},  with annotation. The \code{mir_count} object contains the following:
 #'
 #'          \code{raw_read_count}
 #'
@@ -23,7 +23,9 @@
 #'
 #'          \code{genes_complete_annotation}: Data frame that contains all the annotation information for the miRNAs.
 #'
-#'          \code{genes}: The associated miRNA names. The use of "gene" here is in a generic sense.
+#'          \code{working_gene_annot_var_name}: variable name for the working miRNA ids in the genes_complete_annotation data frame
+#'
+#'          \code{genes}: The associated miRNA names. The use of "gene" here is in a generic sense. might have been merged
 #'
 #'          \code{targets}: Sample annotation matrix
 #'
@@ -36,6 +38,8 @@
 #'          \code{total_species}
 #'
 #'          \code{files_processed}
+#'
+#'          \code{target_annotation_file_processed}: target.annot.file name
 #'
 #' @import foreach
 #' @import doParallel
@@ -145,6 +149,7 @@ mirProcess <- function(path = getwd(), species = NULL,
   names(species_list) <- filename_wo_ext
 
   ## output
+  annot_filename <- unlist(strsplit(target.annot.file, "/"))[length(unlist(strsplit(target.annot.file, "/")))]
   out_dfm <- Reduce(function(i, j)merge(i, j, all = TRUE), species_list)
   out_dfm[is.na(out_dfm) == TRUE] <- 0
   genes_dfm <- out_dfm[, 1, drop = FALSE]
@@ -156,13 +161,15 @@ mirProcess <- function(path = getwd(), species = NULL,
   out <- list(raw_read_count = counts,
               sample_library_sizes = lib_size,
               genes_complete_annotation = genes_dfm,
+              working_gene_annot_var_name = 'mirna',
               genes = genes,
               targets = tgt,
               sample_groups = sample.groups,
               miRNA_database = database,
               selected_species = species,
               total_species = tot_species,
-              files_processed = filename)
+              files_processed = filename,
+              target_annotation_file_processed = annot_filename)
   class(out) <- "mir_count"
   return(out)
 }
@@ -203,7 +210,9 @@ mirProcess <- function(path = getwd(), species = NULL,
 #'
 #'          \code{genes_complete_annotation}: Data frame that contains all the annotation information for the miRNAs.
 #'
-#'          \code{genes}: The associated miRNA names. The use of "gene" here is in a generic sense. might have been merged.
+#'          \code{working_gene_annot_var_name}: variable name for the working miRNA ids in the genes_complete_annotation data frame
+#'
+#'          \code{genes}: The associated miRNA names. The use of "gene" here is in a generic sense. might have been merged
 #'
 #'          \code{targets}: Sample annotation matrix
 #'
@@ -216,6 +225,8 @@ mirProcess <- function(path = getwd(), species = NULL,
 #'          \code{total_species}
 #'
 #'          \code{files_processed}
+#'
+#'          \code{target_annotation_file_processed}: target.annot.file name
 #'
 #' @import foreach
 #' @import doParallel
@@ -239,7 +250,7 @@ mirDeepProcess <- function(raw_read_file = NULL, raw.file.sep = "/t",
                            parallelComputing = FALSE, clusterType = "FORK",
                            verbose = TRUE){
   ## check argument
-  if (is.null) stop("Please provide the raw_read_file")
+  if (is.null(raw_read_file)) stop("Please provide the raw_read_file")
 
   if (is.null(target.annot.file)){  # check and load target (sample) annotation
     stop("Please provide a target annotation file for target.annot.file arugment.")
@@ -300,7 +311,7 @@ mirDeepProcess <- function(raw_read_file = NULL, raw.file.sep = "/t",
     if (rep_merge_method == "none") {
       warning("Genes contain replicates. Maybe merge them first by setting \"rep_merge_method\" to either \"sum\" or \"mean\".")
     } else {
-      if (verbose) cat(paste0("Merging gene reps using ", rep_merge_method, " method..."))
+      if (verbose) cat(paste0("Merging gene reps using \"", rep_merge_method, "\" method..."))
       ID <- as.character(rownames(counts))
       if (mode(counts) == "character") {  # if the count data is characters, should not be the case
         warning("The count file contains characters. Please check.\n")
@@ -348,19 +359,23 @@ mirDeepProcess <- function(raw_read_file = NULL, raw.file.sep = "/t",
   }
 
   # file name
-  filename <- unlist(strsplit(raw_read_file, "/"))[length(unlist(strsplit(raw_read_file, "/")))]
+  annot_filename <- unlist(strsplit(target.annot.file, "/"))[length(unlist(strsplit(target.annot.file, "/")))]
+  read_filename <- unlist(strsplit(raw_read_file, "/"))[length(unlist(strsplit(raw_read_file, "/")))]
 
   ## output
   out <- list(raw_read_count = counts,
               sample_library_sizes = lib_size,
               genes_complete_annotation = genes_dfm,
+              working_gene_annot_var_name = working.gene.annot.var.name,
               genes = genes,
               targets = tgt,
+              sample_groups_var_name = sample_groups.var.name,
               sample_groups = sample.groups,
               miRNA_database = database,
               selected_species = species,
               total_species = tot_species,
-              files_processed = filename)
+              files_processed = read_filename,
+              target_annotation_file_processed = annot_filename)
 
   class(out) <- "mir_count"
   return(out)
@@ -373,7 +388,7 @@ print.mir_count <- function(x, ...){
   cat("\n")
   cat(paste0(" MiRNA database: ", x$miRNA_database, "\n"))
   cat(paste0(" Selected species: ", paste0(x$selected_species, collapse = " "), "\n"))
-  cat(paste0(" Total number of miRNAs: ", length(x$genes), "\n"))
+  cat(paste0(" Total number of unique ", x$working_gene_annot_var_name, " targets: ", length(x$genes), "\n"))
   cat("\n")
   cat(paste0(" Files read: ", "\n"))
   cat(paste0(" ", x$files_processed, collapse = "\n"))

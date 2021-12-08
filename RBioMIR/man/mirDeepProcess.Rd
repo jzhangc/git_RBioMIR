@@ -53,7 +53,9 @@ Outputs a \code{mir_count},  with annotation. The \code{mir_count} object contai
 
          \code{genes_complete_annotation}: Data frame that contains all the annotation information for the miRNAs.
 
-         \code{genes}: The associated miRNA names. The use of "gene" here is in a generic sense. might have been merged.
+         \code{working_gene_annot_var_name}: variable name for the working miRNA ids in the genes_complete_annotation data frame
+
+         \code{genes}: The associated miRNA names. The use of "gene" here is in a generic sense. might have been merged
 
          \code{targets}: Sample annotation matrix
 
@@ -66,6 +68,8 @@ Outputs a \code{mir_count},  with annotation. The \code{mir_count} object contai
          \code{total_species}
 
          \code{files_processed}
+
+         \code{target_annotation_file_processed}: target.annot.file name
 }
 \description{
 Data pre-processing for miRNA-seq read count files specifically designed for count results from the miRDeep2 conserved miRNA module.

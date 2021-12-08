@@ -36,7 +36,7 @@ mirProcess(
 \item{cluterType}{clusterType Only set when \code{parallelComputing = TRUE}, the type for parallel cluster. Options are \code{"PSOCK"} (all operating systems) and \code{"FORK"} (macOS and Unix-like system only). Default is \code{"PSOCK"}.}
 }
 \value{
-Outputs a \code{mir_count} with merged read counts from multiple files, with annotation. The \code{mir_count} object contains the following:
+Outputs a \code{mir_count},  with annotation. The \code{mir_count} object contains the following:
 
          \code{raw_read_count}
 
@@ -44,7 +44,9 @@ Outputs a \code{mir_count} with merged read counts from multiple files, with ann
 
          \code{genes_complete_annotation}: Data frame that contains all the annotation information for the miRNAs.
 
-         \code{genes}: The associated miRNA names. The use of "gene" here is in a generic sense.
+         \code{working_gene_annot_var_name}: variable name for the working miRNA ids in the genes_complete_annotation data frame
+
+         \code{genes}: The associated miRNA names. The use of "gene" here is in a generic sense. might have been merged
 
          \code{targets}: Sample annotation matrix
 
@@ -57,6 +59,8 @@ Outputs a \code{mir_count} with merged read counts from multiple files, with ann
          \code{total_species}
 
          \code{files_processed}
+
+         \code{target_annotation_file_processed}: target.annot.file name
 }
 \description{
 Data pre-processing for miRNA-seq read count files. Also see \code{\link{mirProcessML}}.
