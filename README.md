@@ -34,6 +34,9 @@ Installation:
 
 Update log
 
+    0.2.5 (Dec.23.2021)
+      - S4 class "mircount" added as an improved miRNA read class over the S3 class "mir_count"
+
     0.2.4 (Dec.7.2021)
       - New items added to the "mir_count" object
         - working_gene_annot_var_name: for the object derived from mirProcess(), the value for this is always "mirna"

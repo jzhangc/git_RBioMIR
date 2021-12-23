@@ -197,7 +197,7 @@ mirProcess <- function(path = getwd(), species = NULL,
 #'          2. For \code{target.annot.file}, the argument doesn't accept full file path. The function will only seek the file under working directory. So, the file should be placed under working directory.
 #'
 #'          3. When miRNA replicates are merged, i.e. \code{rep_merge_method} set to either \code{"sum"} or \code{"mean"},
-#'             the \code{genes} item contains the merged results, whereas the \coce{genes_complete_annoation} contains the original first four columns
+#'             the \code{genes} item contains the merged results, whereas the \code{genes_complete_annoation} contains the original first four columns
 #'             from the miRDeep2 output, not merged.
 #'
 #'             The replicates may happen when different precursors lead to the same mature miRNA.
