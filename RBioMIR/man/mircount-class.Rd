@@ -10,6 +10,7 @@ S4 class equivalent to the S3 class \code{mir_count}.
 }
 \details{
 1. The class links the column of \code{raw_read_count}, rows of \code{targets}, \code{sample_library_sizes}, \code{sample_groups} and \code{genes}.
+
          2. Subsetting in "1" does not subset \code{genes_complete_annotation} as this data.frame may contain replicates.
 }
 \section{Slots}{

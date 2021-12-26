@@ -18,6 +18,7 @@ dfORmatrix <- setClassUnion("dfORmatrix", c("data.frame", "matrix"))  # use more
 #' @slot target_annotation_file_processed str. Processed sample annotation file name.
 #'
 #' @details 1. The class links the column of \code{raw_read_count}, rows of \code{targets}, \code{sample_library_sizes}, \code{sample_groups} and \code{genes}.
+#'
 #'          2. Subsetting in "1" does not subset \code{genes_complete_annotation} as this data.frame may contain replicates.
 mircount <- setClass("mircount", representation(
   raw_read_count = "dfORmatrix",
