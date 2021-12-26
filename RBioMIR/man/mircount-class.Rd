@@ -8,6 +8,10 @@
 \description{
 S4 class equivalent to the S3 class \code{mir_count}.
 }
+\details{
+1. The class links the column of \code{raw_read_count}, rows of \code{targets}, \code{sample_groups} and \code{genes}.
+         2. Subsetting in "1" does not subset \code{genes_complete_annotation} as this data.frame may contain replicates.
+}
 \section{Slots}{
 
 \describe{
@@ -22,6 +26,12 @@ S4 class equivalent to the S3 class \code{mir_count}.
 \item{\code{targets}}{data.frame. Complete sample annotation data frame.}
 
 \item{\code{sample_groups_var_name}}{str. Variable name for sample grouping in the sample annotation.}
+
+\item{\code{sample_groups}}{factor. Primary sample group factor.}
+
+\item{\code{miRNA_database}}{str. MiR database.}
+
+\item{\code{selected_species}}{str. The miRBase species code for the selected species of interest.}
 
 \item{\code{total_species}}{str. Total number of species (in miRBase species code).}
 

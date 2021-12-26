@@ -2,10 +2,34 @@
 % Please edit documentation in R/s4_mircount.R
 \name{as.mircount}
 \alias{as.mircount}
+\alias{as.mircount.mir_count}
+\alias{as.mircount.default}
 \title{as.mircount}
 \usage{
 as.mircount(object, ...)
+
+\method{as.mircount}{mir_count}(x)
+
+\method{as.mircount}{default}(
+  raw_read_count,
+  sample_library_sizes,
+  genes_complete_annotation,
+  working_gene_annot_var_name,
+  genes,
+  targets,
+  sample_groups_var_name,
+  sample_groups,
+  miRNA_database,
+  selected_species,
+  total_species,
+  files_processed,
+  target_annotation_file_processed
+)
 }
 \description{
 Convert compatible S3 classes to an \code{mircount} class.
+
+\code{as.mircount} for S3 \code{mir_count} method
+
+Default method for \code{as.mircount}
 }
