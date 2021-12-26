@@ -1,6 +1,7 @@
 #' class union for S4
 dfORmatrix <- setClassUnion("dfORmatrix", c("data.frame", "matrix"))  # use more than one class
 
+
 #' @title mircount
 #' @description  S4 class equivalent to the S3 class \code{mir_count}.
 #'
@@ -36,6 +37,7 @@ mircount <- setClass("mircount", representation(
   target_annotation_file_processed = "character"
 ))
 
+
 #' @title dim.mircount
 #' @description dim method for \code{mircount} class.
 #'
@@ -49,6 +51,7 @@ dim.mircount <- function(x) {
   }
 }
 
+
 #' @title length.mircount
 #' @description length method for \code{mircount} class.
 #'
@@ -57,6 +60,7 @@ dim.mircount <- function(x) {
 length.mircount <- function(x) {
   dim(x@raw_read_count)[2]
 }
+
 
 #' @title as.matrix.mircount
 #' @description as.matrix method for \code{mircount} class.
@@ -68,6 +72,7 @@ as.matrix.mircount <- function(x) {
   return(y)
 }
 
+
 #' @title as.data.frame.mircount
 #' @description as.data.frame method for \code{mircount} class.
 #'
@@ -77,6 +82,7 @@ as.data.frame.mircount <- function(x) {
   y <- as.data.frame(x@raw_read_count)
   return(y)
 }
+
 
 #' @title \code{mircount} substting method
 #' @description Automatic subsetting method for \code{mircount} class.
@@ -96,6 +102,26 @@ setMethod("[", "mircount", definition = function(x, i, j, ..., drop = TRUE){
              sample_groups = factor(x@sample_groups[j], levels = unique(x@sample_groups[j])),
              targets = x@targets[j, , ..., drop = drop])
 })
+
+
+#' @title show
+#' @description \code{show} method for \code{mircount}.
+#' @export
+setMethod(f = "show",
+          signature = "mircount",
+          definition = function(object){
+            cat("MiRNA raw reads processing summary (S4 class: mircount):\n")
+            cat("\n")
+            cat(paste0(" MiRNA database: ", object@miRNA_database, "\n"))
+            cat(paste0(" Selected species: ", paste0(object@selected_species, collapse = " "), "\n"))
+            cat(paste0(" Total number ", object@working_gene_annot_var_name, " targets (no merging): ", nrow(object@genes_complete_annotation), "\n"))
+            cat(paste0(" Total number of unique ", object@working_gene_annot_var_name, " targets ", length(object@genes), "\n"))
+            cat("\n")
+            cat(paste0(" Files read: ", "\n"))
+            cat(paste0(" ", object@files_processed, collapse = "\n"))
+            cat("\n\n")
+          })
+
 
 #' @title as.mircount
 #' @description Convert compatible S3 classes to an \code{mircount} class.
@@ -152,18 +178,4 @@ as.mircount.default <- function(raw_read_count, sample_library_sizes,
   y@files_processed = files_processed
   y@target_annotation_file_processed = target_annotation_file_processed
   return(y) # return the mapped y
-}
-
-#' @export
-print.mircount <- function(x, ...){
-  cat("MiRNA raw reads processing summary:\n")
-  cat("\n")
-  cat(paste0(" MiRNA database: ", x@miRNA_database, "\n"))
-  cat(paste0(" Selected species: ", paste0(x@selected_species, collapse = " "), "\n"))
-  cat(paste0(" Total number ", x@working_gene_annot_var_name, " targets (no merging): ", nrow(x@genes_complete_annotation), "\n"))
-  cat(paste0(" Total number of unique ", x@working_gene_annot_var_name, " targets ", length(x@genes), "\n"))
-  cat("\n")
-  cat(paste0(" Files read: ", "\n"))
-  cat(paste0(" ", x@files_processed, collapse = "\n"))
-  cat("\n\n")
 }
