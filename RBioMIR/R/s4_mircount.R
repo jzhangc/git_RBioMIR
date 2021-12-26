@@ -17,7 +17,7 @@ dfORmatrix <- setClassUnion("dfORmatrix", c("data.frame", "matrix"))  # use more
 #' @slot files_processed str. Processed file(s) name containing raw reads.
 #' @slot target_annotation_file_processed str. Processed sample annotation file name.
 #'
-#' @details 1. The class links the column of \code{raw_read_count}, rows of \code{targets}, \code{sample_groups} and \code{genes}.
+#' @details 1. The class links the column of \code{raw_read_count}, rows of \code{targets}, \code{sample_library_sizes}, \code{sample_groups} and \code{genes}.
 #'          2. Subsetting in "1" does not subset \code{genes_complete_annotation} as this data.frame may contain replicates.
 mircount <- setClass("mircount", representation(
   raw_read_count = "dfORmatrix",
@@ -80,7 +80,7 @@ as.data.frame.mircount <- function(x) {
 #' @title \code{mircount} substting method
 #' @description Automatic subsetting method for \code{mircount} class.
 #'
-#' @details It links the column of \code{raw_read_count}, rows of \code{targets} and length of \code{genes}.
+#' @details It links the column of \code{raw_read_count}, rows of \code{targets}, \code{sample_library_sizes} and \code{genes}.
 #' @examples
 #' \dontrun{
 #' a <- new("mircount")
@@ -91,6 +91,7 @@ setMethod("[", "mircount", definition = function(x, i, j, ..., drop = TRUE){
   initialize(x,
              raw_read_count = x@raw_read_count[i, j, ..., drop = drop],
              genes = x@genes[i],
+             sample_library_sizes = x@sample_library_sizes[j],
              sample_groups = factor(x@sample_groups[j], levels = unique(x@sample_groups[j])),
              targets = x@targets[j, , ..., drop = drop])
 })

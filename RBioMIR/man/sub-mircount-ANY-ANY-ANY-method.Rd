@@ -10,7 +10,7 @@
 Automatic subsetting method for \code{mircount} class.
 }
 \details{
-It links the column of \code{raw_read_count}, rows of \code{targets} and length of \code{genes}.
+It links the column of \code{raw_read_count}, rows of \code{targets}, \code{sample_library_sizes} and \code{genes}.
 }
 \examples{
 \dontrun{
