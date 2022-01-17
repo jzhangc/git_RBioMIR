@@ -34,6 +34,9 @@ Installation:
 
 Update log
 
+    0.2.6 (Jan.17.2022)
+      - Small typo fixes
+
     0.2.5 (Dec.23.2021)
       - S4 class "mircount" added as an improved miRNA read class over the S3 class "mir_count"
 

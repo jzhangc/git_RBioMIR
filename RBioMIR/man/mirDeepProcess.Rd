@@ -5,13 +5,13 @@
 \title{mirDeepProcess}
 \usage{
 mirDeepProcess(
-  raw_read_file = NULL,
+  raw.read.file = NULL,
   raw.file.sep = "/t",
-  rm_norm_cols = TRUE,
+  rm.norm.cols = TRUE,
   working.gene.annot.var.name = "miRNA",
   target.annot.file = NULL,
   sample_groups.var.name = NULL,
-  rep_merge_method = c("none", "sum", "mean"),
+  rep.merge.method = c("none", "sum", "mean"),
   species = NULL,
   database = "mirbase",
   parallelComputing = FALSE,
@@ -20,11 +20,11 @@ mirDeepProcess(
 )
 }
 \arguments{
-\item{raw_read_file}{Read count csv file from miRDeep2.}
+\item{raw.read.file}{Read count csv file from miRDeep2.}
 
 \item{raw.file.sep}{Raw read count file separators. Default is \code{"\t"}, i.e. tab.}
 
-\item{rm_norm_cols}{Bool. If to remove the \code{"(norm)"} columns from the read file. Default is \code{TRUE}.}
+\item{rm.norm.cols}{Bool. If to remove the \code{"(norm)"} columns from the read file. Default is \code{TRUE}.}
 
 \item{working.gene.annot.var.name}{String. The column name for the miRNA identifiers. Default is \code{"miRNA"}. Could be precursor (\code{"precursor"}) as well.}
 
@@ -32,7 +32,7 @@ mirDeepProcess(
 
 \item{sample_groups.var.name}{Sample group annotation variable name in the \code{target.annot.file}.}
 
-\item{rep_merge_method}{String. MiRNA replicate merging method. Default is \code{"none"}.}
+\item{rep.merge.method}{String. MiRNA replicate merging method. Default is \code{"none"}.}
 
 \item{species}{Species code, following the traditional abbreviated naming convention, e.g. "hsa", "mmu".}
 
@@ -81,7 +81,7 @@ Data pre-processing for miRNA-seq read count files specifically designed for cou
 
          2. For \code{target.annot.file}, the argument doesn't accept full file path. The function will only seek the file under working directory. So, the file should be placed under working directory.
 
-         3. When miRNA replicates are merged, i.e. \code{rep_merge_method} set to either \code{"sum"} or \code{"mean"},
+         3. When miRNA replicates are merged, i.e. \code{rep.merge.method} set to either \code{"sum"} or \code{"mean"},
             the \code{genes} item contains the merged results, whereas the \code{genes_complete_annoation} contains the original first four columns
             from the miRDeep2 output, not merged.
 
@@ -89,7 +89,7 @@ Data pre-processing for miRNA-seq read count files specifically designed for cou
 }
 \examples{
 \dontrun{
-readcountMerged <- mirDeepProcess(raw_read_file = "miRNAs_expressed_all_samples.csv", rm_norm_cols = TRUE,
+readcountMerged <- mirDeepProcess(raw.read.file = "miRNAs_expressed_all_samples.csv", rm.norm.cols = TRUE,
                                   raw.file.sep = "/t",
                                   target.annot.file = "samples_annotation.csv",
                                   sample_groups.var.name = 'groupid',

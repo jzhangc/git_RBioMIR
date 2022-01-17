@@ -1,7 +1,7 @@
 Package: RBioMIR
 Type: Package
 Title: miRNA-Seq pipeline capable of analyzing conserved and novel (test only for version 0.1.6) miRNA for the animal species of interest
-Version: 0.2.5
+Version: 0.2.6
 Authors@R: person("Jing", "Zhang", email = "jzhangcad@gmail.com", role = c("aut", "cre"))
 Description: The package analyzes read counts from small RNA-seq experiments
 License: GPL-3

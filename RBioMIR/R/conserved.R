@@ -178,11 +178,11 @@ mirProcess <- function(path = getwd(), species = NULL,
 #' @title mirDeepProcess
 #'
 #' @description Data pre-processing for miRNA-seq read count files specifically designed for count results from the miRDeep2 conserved miRNA module.
-#' @param raw_read_file Read count csv file from miRDeep2.
+#' @param raw.read.file Read count csv file from miRDeep2.
 #' @param raw.file.sep Raw read count file separators. Default is \code{"\t"}, i.e. tab.
-#' @param rm_norm_cols Bool. If to remove the \code{"(norm)"} columns from the read file. Default is \code{TRUE}.
+#' @param rm.norm.cols Bool. If to remove the \code{"(norm)"} columns from the read file. Default is \code{TRUE}.
 #' @param working.gene.annot.var.name String. The column name for the miRNA identifiers. Default is \code{"miRNA"}. Could be precursor (\code{"precursor"}) as well.
-#' @param rep_merge_method String. MiRNA replicate merging method. Default is \code{"none"}.
+#' @param rep.merge.method String. MiRNA replicate merging method. Default is \code{"none"}.
 #' @param species Species code, following the traditional abbreviated naming convention, e.g. "hsa", "mmu".
 #' @param target.annot.file Annotation file describing filenames and targets, and should be in \code{csv} format.
 #' @param sample_groups.var.name Sample group annotation variable name in the \code{target.annot.file}.
@@ -196,7 +196,7 @@ mirProcess <- function(path = getwd(), species = NULL,
 #'
 #'          2. For \code{target.annot.file}, the argument doesn't accept full file path. The function will only seek the file under working directory. So, the file should be placed under working directory.
 #'
-#'          3. When miRNA replicates are merged, i.e. \code{rep_merge_method} set to either \code{"sum"} or \code{"mean"},
+#'          3. When miRNA replicates are merged, i.e. \code{rep.merge.method} set to either \code{"sum"} or \code{"mean"},
 #'             the \code{genes} item contains the merged results, whereas the \code{genes_complete_annoation} contains the original first four columns
 #'             from the miRDeep2 output, not merged.
 #'
@@ -233,7 +233,7 @@ mirProcess <- function(path = getwd(), species = NULL,
 #' @importFrom parallel detectCores makeCluster stopCluster
 #' @examples
 #' \dontrun{
-#' readcountMerged <- mirDeepProcess(raw_read_file = "miRNAs_expressed_all_samples.csv", rm_norm_cols = TRUE,
+#' readcountMerged <- mirDeepProcess(raw.read.file = "miRNAs_expressed_all_samples.csv", rm.norm.cols = TRUE,
 #'                                   raw.file.sep = "/t",
 #'                                   target.annot.file = "samples_annotation.csv",
 #'                                   sample_groups.var.name = 'groupid',
@@ -242,15 +242,15 @@ mirProcess <- function(path = getwd(), species = NULL,
 #'                                   verbose = TRUE)
 #' }
 #' @export
-mirDeepProcess <- function(raw_read_file = NULL, raw.file.sep = "/t",
-                           rm_norm_cols = TRUE, working.gene.annot.var.name = "miRNA",
+mirDeepProcess <- function(raw.read.file = NULL, raw.file.sep = "/t",
+                           rm.norm.cols = TRUE, working.gene.annot.var.name = "miRNA",
                            target.annot.file = NULL, sample_groups.var.name = NULL,
-                           rep_merge_method = c("none", "sum", "mean"),
+                           rep.merge.method = c("none", "sum", "mean"),
                            species = NULL, database = "mirbase",
                            parallelComputing = FALSE, clusterType = "FORK",
                            verbose = TRUE){
   ## check argument
-  if (is.null(raw_read_file)) stop("Please provide the raw_read_file")
+  if (is.null(raw.read.file)) stop("Please provide the raw.read.file")
 
   if (is.null(target.annot.file)){  # check and load target (sample) annotation
     stop("Please provide a target annotation file for target.annot.file arugment.")
@@ -274,18 +274,18 @@ mirDeepProcess <- function(raw_read_file = NULL, raw.file.sep = "/t",
   }
 
   if (!database %in% c("mirbase")) stop("For now, the function only accepts database = \"mirbase\".")
-  rep_merge_method <- match.arg(rep_merge_method, choices = c("none", "sum", "mean"))
+  rep.merge.method <- match.arg(rep.merge.method, choices = c("none", "sum", "mean"))
 
   ## construct data
-  raw <- read.delim(raw_read_file, check.names = FALSE)
+  raw <- read.delim(raw.read.file, check.names = FALSE)
   if (length(grep("#", colnames(raw))) > 0) {
     colnames(raw) <- gsub("#", "", colnames(raw))
   }
 
-  if (rm_norm_cols) {
+  if (rm.norm.cols) {
     norm_idx <- grep("(norm)", colnames(raw))
     if (length(norm_idx) < 1) {
-      warning("No norm columns are found. Argument \"rm_norm_cols\" ignored.\n")
+      warning("No norm columns are found. Argument \"rm.norm.cols\" ignored.\n")
     } else {
       raw[, norm_idx] <- NULL
     }
@@ -308,10 +308,10 @@ mirDeepProcess <- function(raw_read_file = NULL, raw.file.sep = "/t",
 
   # rep merge
   if (length(genes) != length(unique(genes))) {
-    if (rep_merge_method == "none") {
-      warning("Genes contain replicates. Maybe merge them first by setting \"rep_merge_method\" to either \"sum\" or \"mean\".")
+    if (rep.merge.method == "none") {
+      warning("Genes contain replicates. Maybe merge them first by setting \"rep.merge.method\" to either \"sum\" or \"mean\".")
     } else {
-      if (verbose) cat(paste0("Merging gene reps using \"", rep_merge_method, "\" method..."))
+      if (verbose) cat(paste0("Merging gene reps using \"", rep.merge.method, "\" method..."))
       ID <- as.character(rownames(counts))
       if (mode(counts) == "character") {  # if the count data is characters, should not be the case
         warning("The count file contains characters. Please check.\n")
@@ -322,9 +322,9 @@ mirDeepProcess <- function(raw_read_file = NULL, raw.file.sep = "/t",
       } else {
         ID <- factor(ID, levels = unique(ID))
         y <- rowsum(counts, ID, reorder = FALSE, na.rm = TRUE)  # sum
-        if (rep_merge_method == "sum"){
+        if (rep.merge.method == "sum"){
           counts <- y
-        } else if (rep_merge_method == "mean") {
+        } else if (rep.merge.method == "mean") {
           n <- rowsum(1L - is.na(counts), ID, reorder = FALSE)
           counts <- y/n
         }
@@ -360,7 +360,7 @@ mirDeepProcess <- function(raw_read_file = NULL, raw.file.sep = "/t",
 
   # file name
   annot_filename <- unlist(strsplit(target.annot.file, "/"))[length(unlist(strsplit(target.annot.file, "/")))]
-  read_filename <- unlist(strsplit(raw_read_file, "/"))[length(unlist(strsplit(raw_read_file, "/")))]
+  read_filename <- unlist(strsplit(raw.read.file, "/"))[length(unlist(strsplit(raw.read.file, "/")))]
 
   ## output
   out <- list(raw_read_count = counts,
