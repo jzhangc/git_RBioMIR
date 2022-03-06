@@ -11,6 +11,7 @@ mirDeepProcess(
   working.gene.annot.var.name = "miRNA",
   target.annot.file = NULL,
   sample_groups.var.name = NULL,
+  sampleid.var.name = NULL,
   rep.merge.method = c("none", "sum", "mean"),
   species = NULL,
   database = "mirbase",
@@ -31,6 +32,8 @@ mirDeepProcess(
 \item{target.annot.file}{Annotation file describing filenames and targets, and should be in \code{csv} format.}
 
 \item{sample_groups.var.name}{Sample group annotation variable name in the \code{target.annot.file}.}
+
+\item{sampleid.var.name}{Sample ID annotation variable name in the \code{target.annot.file}.}
 
 \item{rep.merge.method}{String. MiRNA replicate merging method. Default is \code{"none"}.}
 

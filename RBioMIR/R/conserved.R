@@ -189,6 +189,7 @@ mirProcess <- function(path = getwd(), species = NULL,
 #' @param species Species code, following the traditional abbreviated naming convention, e.g. "hsa", "mmu".
 #' @param target.annot.file Annotation file describing filenames and targets, and should be in \code{csv} format.
 #' @param sample_groups.var.name Sample group annotation variable name in the \code{target.annot.file}.
+#' @param sampleid.var.name Sample ID annotation variable name in the \code{target.annot.file}.
 #' @param database MiRNA database, only for miRNA naming conventions. Currently the function only takes "mirbase".
 #' @param parallelComputing Whether to use parallel computing or not. Default is \code{TRUE}.
 #' @param cluterType clusterType Only set when \code{parallelComputing = TRUE}, the type for parallel cluster. Options are \code{"PSOCK"} (all operating systems) and \code{"FORK"} (macOS and Unix-like system only). Default is \code{"PSOCK"}.
@@ -249,7 +250,7 @@ mirProcess <- function(path = getwd(), species = NULL,
 #' @export
 mirDeepProcess <- function(raw.read.file = NULL, raw.file.sep = "/t",
                            rm.norm.cols = TRUE, working.gene.annot.var.name = "miRNA",
-                           target.annot.file = NULL, sample_groups.var.name = NULL,
+                           target.annot.file = NULL, sample_groups.var.name = NULL, sampleid.var.name = NULL,
                            rep.merge.method = c("none", "sum", "mean"),
                            species = NULL, database = "mirbase",
                            parallelComputing = FALSE, clusterType = "FORK",
@@ -272,10 +273,18 @@ mirDeepProcess <- function(raw.read.file = NULL, raw.file.sep = "/t",
   }
 
   if (is.null(sample_groups.var.name)) stop("Please provide sample_groups.var.name.")
+  if (is.null(sampleid.var.name)) stop("Please provide sampleid.var.name.")
+
   if (!sample_groups.var.name %in% names(tgt)){
     stop("Sample group annotation variable not found in the target annotation file.")
   } else {
     sample.groups <- factor(tgt[, sample_groups.var.name], levels = unique(tgt[, sample_groups.var.name]))
+  }
+
+  if (!sampleid.var.name %in% names(tgt)) {
+    stop("Sampleid annotation variable not found in the target annotation file.")
+  } else {
+    annot_sample_names <- tgt[, sampleid.var.name]
   }
 
   if (!database %in% c("mirbase")) stop("For now, the function only accepts database = \"mirbase\".")
@@ -366,6 +375,14 @@ mirDeepProcess <- function(raw.read.file = NULL, raw.file.sep = "/t",
   # file name
   annot_filename <- unlist(strsplit(target.annot.file, "/"))[length(unlist(strsplit(target.annot.file, "/")))]
   read_filename <- unlist(strsplit(raw.read.file, "/"))[length(unlist(strsplit(raw.read.file, "/")))]
+
+  # final check
+  if (!is.null(colnames(counts))) {
+    counts_sample_names <- colnames(counts)
+    if (!identical(counts_sample_names, annot_sample_names)) {
+      warning("Input data sample order not identical to the annotation file sample order. The output uses the annotation file order.")
+    }
+  }
 
   ## output
   out <- list(raw_read_count = counts,
