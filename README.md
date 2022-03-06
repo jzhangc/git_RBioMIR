@@ -34,6 +34,9 @@ Installation:
 
 Update log
 
+    0.2.7 (Mar.6.2022)
+      - mircount(s4) and mir_count now have a sample_groups_var_name item
+
     0.2.6 (Jan.17.2022)
       - Small typo fixes
 

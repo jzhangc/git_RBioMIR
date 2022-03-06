@@ -29,6 +29,8 @@
 #'
 #'          \code{targets}: Sample annotation matrix
 #'
+#'          \code{sample_groups_var_name}
+#'
 #'          \code{sample_gourps}: factor object for sample groups annotation
 #'
 #'          \code{miRNA_database}
@@ -164,6 +166,7 @@ mirProcess <- function(path = getwd(), species = NULL,
               working_gene_annot_var_name = 'mirna',
               genes = genes,
               targets = tgt,
+              sample_groups_var_name = sample_groups.var.name,
               sample_groups = sample.groups,
               miRNA_database = database,
               selected_species = species,
@@ -215,6 +218,8 @@ mirProcess <- function(path = getwd(), species = NULL,
 #'          \code{genes}: The associated miRNA names. The use of "gene" here is in a generic sense. might have been merged
 #'
 #'          \code{targets}: Sample annotation matrix
+#'
+#'          \code{sample_groups_var_name}
 #'
 #'          \code{sample_gourps}: factor object for sample groups annotation
 #'

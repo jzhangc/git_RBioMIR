@@ -59,6 +59,8 @@ Outputs a \code{mir_count},  with annotation. The \code{mir_count} object contai
 
          \code{targets}: Sample annotation matrix
 
+         \code{sample_groups_var_name}
+
          \code{sample_gourps}: factor object for sample groups annotation
 
          \code{miRNA_database}
