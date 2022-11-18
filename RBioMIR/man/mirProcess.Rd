@@ -9,6 +9,7 @@ mirProcess(
   species = NULL,
   target.annot.file = NULL,
   sample_groups.var.name = NULL,
+  filename.var.name = "filename",
   database = "mirbase",
   raw.file.sep = "",
   parallelComputing = FALSE,
@@ -24,6 +25,8 @@ mirProcess(
 \item{target.annot.file}{Annotation file describing filenames and targets, and should be in \code{csv} format.}
 
 \item{sample_groups.var.name}{Sample group annotation variable name in the \code{target.annot.file}.}
+
+\item{filename.var.name}{Count file name variable name in the \code{target.annot.file}.}
 
 \item{database}{MiRNA database, only for miRNA naming conventions. Currently the function only takes "mirbase".}
 

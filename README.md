@@ -34,6 +34,10 @@ Installation:
 
 Update log
 
+    0.2.8 (Mar.6.2022)
+      - mirProcess() now only loads the files specified in the annotation file, as opposed to all the files in the working directory
+      - Number of files information added to print.mir_count method
+
     0.2.7 (Mar.6.2022)
       - mircount(s4) and mir_count now have a sample_groups_var_name item
       - Error handling added for mirDeepProcess to check sample order between the data file and sample annotation file

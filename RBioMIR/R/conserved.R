@@ -6,6 +6,7 @@
 #' @param species Species code, following the traditional abbreviated naming convention, e.g. "hsa", "mmu".
 #' @param target.annot.file Annotation file describing filenames and targets, and should be in \code{csv} format.
 #' @param sample_groups.var.name Sample group annotation variable name in the \code{target.annot.file}.
+#' @param filename.var.name Count file name variable name in the \code{target.annot.file}.
 #' @param database MiRNA database, only for miRNA naming conventions. Currently the function only takes "mirbase".
 #' @param parallelComputing Whether to use parallel computing or not. Default is \code{TRUE}.
 #' @param cluterType clusterType Only set when \code{parallelComputing = TRUE}, the type for parallel cluster. Options are \code{"PSOCK"} (all operating systems) and \code{"FORK"} (macOS and Unix-like system only). Default is \code{"PSOCK"}.
@@ -52,7 +53,7 @@
 #' }
 #' @export
 mirProcess <- function(path = getwd(), species = NULL,
-                       target.annot.file = NULL, sample_groups.var.name = NULL,
+                       target.annot.file = NULL, sample_groups.var.name = NULL, filename.var.name = "filename",
                        database = "mirbase", raw.file.sep = "",
                        parallelComputing = FALSE, clusterType = "FORK",
                        verbose = TRUE){
@@ -78,11 +79,22 @@ mirProcess <- function(path = getwd(), species = NULL,
     sample.groups <- factor(tgt[, sample_groups.var.name], levels = unique(tgt[, sample_groups.var.name]))
   }
 
+  if (!filename.var.name %in% names(tgt)){
+    stop("File name variable not found in the target annotation file.")
+  } else {
+    tgt_filename <- tgt[, filename.var.name]
+  }
+
   if (!database %in% c("mirbase")) stop("For now, the function only accepts database = \"mirbase\".")
 
   ## load files
   # set read files
-  filename <- list.files(path = path, pattern = ".txt")
+  dir_filename <- list.files(path = path, pattern = ".txt")
+  if (all(!tgt_filename %in% dir_filename)) {
+    stop("Not all file names specified in the annotation file found in the directory.")
+  } else {
+    filename <- tgt_filename
+  }
   filename_wo_ext <- sub("[.][^.]*$", "", filename)  # general expression to remove extension, i.e. a.b.c becomes a.b
 
   # load reads
@@ -131,6 +143,7 @@ mirProcess <- function(path = getwd(), species = NULL,
   for (i in filename){
     if (verbose) cat(paste0("\t", i, "\n"))
   }
+  if (verbose) cat(paste0("Number of files loaded: ", length(filename)))
 
   # get and check species
   tot_species <- foreach(i = raw_list, .combine = "c") %do% i$species
@@ -415,6 +428,8 @@ print.mir_count <- function(x, ...){
   cat("\n")
   cat(paste0(" Files read: ", "\n"))
   cat(paste0(" ", x$files_processed, collapse = "\n"))
+
+  cat(paste0(" Total number of files read: ", length(x$files_processed)))
   cat("\n\n")
 }
 
